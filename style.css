@@ -1,21 +1,39 @@
 body {
     margin: 0;
     font-family: Arial;
-    background: #0d0d0d;
+    background: #0b0b0b;
     color: white;
 }
 
-.topbar {
+.navbar {
+    display: flex;
+    justify-content: space-around;
     background: #111;
-    padding: 15px;
-    text-align: center;
-    border-bottom: 1px solid #222;
+    padding: 10px;
+    position: sticky;
+    top: 0;
 }
 
-.container {
-    max-width: 500px;
-    margin: auto;
+.navbar button {
+    background: #222;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.navbar button:hover {
+    background: #00ff88;
+    color: black;
+}
+
+.page {
     padding: 15px;
+}
+
+.hidden {
+    display: none;
 }
 
 .card {
@@ -23,33 +41,24 @@ body {
     padding: 15px;
     margin-top: 15px;
     border-radius: 12px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.5);
 }
 
 input {
     width: 100%;
     padding: 10px;
     margin-top: 8px;
-    border-radius: 8px;
     border: none;
-    outline: none;
+    border-radius: 8px;
+    background: #222;
+    color: white;
 }
 
 button {
     width: 100%;
-    padding: 10px;
     margin-top: 10px;
+    padding: 10px;
     background: #00ff88;
     border: none;
     border-radius: 8px;
     font-weight: bold;
-    cursor: pointer;
-}
-
-button:hover {
-    background: #00cc6a;
-}
-
-p {
-    margin: 5px 0;
 }

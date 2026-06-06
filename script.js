@@ -1,12 +1,17 @@
 let veriler = JSON.parse(localStorage.getItem("veriler")) || [];
 
-function kaydet() {
+function save() {
     localStorage.setItem("veriler", JSON.stringify(veriler));
-    guncelle();
+    update();
+}
+
+function showPage(page) {
+    document.querySelectorAll(".page").forEach(p => p.classList.add("hidden"));
+    document.getElementById(page).classList.remove("hidden");
 }
 
 function kiloEkle() {
-    let kilo = document.getElementById("kilo").value;
+    let kilo = document.getElementById("kiloInput").value;
 
     veriler.push({
         tip: "kilo",
@@ -14,48 +19,53 @@ function kiloEkle() {
         tarih: new Date().toLocaleDateString()
     });
 
-    kaydet();
+    save();
 }
 
 function agirlikEkle() {
     let hareket = document.getElementById("hareket").value.toLowerCase();
-    let agirlik = Number(document.getElementById("agirlik").value);
+    let kg = Number(document.getElementById("agirlikInput").value);
 
     veriler.push({
         tip: "agirlik",
-        hareket: hareket,
-        veri: agirlik,
+        hareket,
+        veri: kg,
         tarih: new Date().toLocaleDateString()
     });
 
-    kaydet();
+    save();
 }
 
-function guncelle() {
+function update() {
 
-    let bugun = veriler.filter(v => v.tip === "kilo").slice(-1)[0];
+    let kiloList = veriler.filter(v => v.tip === "kilo");
+    let son = kiloList.slice(-1)[0];
+
     document.getElementById("bugunKilo").innerText =
-        "Bugünkü kilo: " + (bugun ? bugun.veri + " kg" : "-");
+        son ? son.veri + " kg" : "-";
 
     let bench = veriler.filter(v => v.hareket === "bench");
     let squat = veriler.filter(v => v.hareket === "squat");
 
-    let benchMax = bench.length ? Math.max(...bench.map(v => v.veri)) : "-";
-    let squatMax = squat.length ? Math.max(...squat.map(v => v.veri)) : "-";
+    document.getElementById("benchMax").innerText =
+        bench.length ? Math.max(...bench.map(v => v.veri)) + " kg" : "-";
 
-    document.getElementById("benchMax").innerText = "Bench Max: " + benchMax;
-    document.getElementById("squatMax").innerText = "Squat Max: " + squatMax;
+    document.getElementById("squatMax").innerText =
+        squat.length ? Math.max(...squat.map(v => v.veri)) + " kg" : "-";
 
-    let liste = document.getElementById("liste");
-    liste.innerHTML = "";
+    // kilo listesi
+    document.getElementById("kiloListe").innerHTML =
+        veriler.filter(v => v.tip === "kilo")
+        .slice().reverse()
+        .map(v => `<p>${v.tarih} - ${v.veri} kg</p>`)
+        .join("");
 
-    veriler.slice().reverse().forEach(v => {
-        if (v.tip === "kilo") {
-            liste.innerHTML += `<p>📅 ${v.tarih} | Kilo: ${v.veri} kg</p>`;
-        } else {
-            liste.innerHTML += `<p>🏋️ ${v.tarih} | ${v.hareket}: ${v.veri} kg</p>`;
-        }
-    });
+    // ağırlık listesi
+    document.getElementById("agirlikListe").innerHTML =
+        veriler.filter(v => v.tip === "agirlik")
+        .slice().reverse()
+        .map(v => `<p>${v.tarih} - ${v.hareket}: ${v.veri} kg</p>`)
+        .join("");
 }
 
-guncelle();
+update();

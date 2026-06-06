@@ -3,46 +3,66 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Spor Takip</title>
+<title>Fitness App</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="topbar">
-    <h1>🏋️ Spor Paneli</h1>
+<div class="navbar">
+    <button onclick="showPage('home')">🏠 Ana Menü</button>
+    <button onclick="showPage('kilo')">⚖️ Kilo</button>
+    <button onclick="showPage('agirlik')">🏋️ Ağırlık</button>
 </div>
 
-<div class="container">
+<!-- ANA MENÜ -->
+<div id="home" class="page">
+    <h1>🔥 Dashboard</h1>
 
-    <!-- ANA MENÜ -->
     <div class="card">
-        <h2>📊 Özet</h2>
-        <p id="bugunKilo">Bugünkü kilo: -</p>
-        <p id="benchMax">Bench Max: -</p>
-        <p id="squatMax">Squat Max: -</p>
+        <h2>Bugünkü Kilo</h2>
+        <p id="bugunKilo">-</p>
     </div>
 
-    <!-- KİLO -->
     <div class="card">
-        <h2>📅 Kilo Ekle</h2>
-        <input id="kilo" placeholder="Kilo">
+        <h2>Bench Max</h2>
+        <p id="benchMax">-</p>
+    </div>
+
+    <div class="card">
+        <h2>Squat Max</h2>
+        <p id="squatMax">-</p>
+    </div>
+</div>
+
+<!-- KİLO -->
+<div id="kilo" class="page hidden">
+    <h1>⚖️ Kilo Takibi</h1>
+
+    <div class="card">
+        <input id="kiloInput" placeholder="Kilo gir">
         <button onclick="kiloEkle()">Kaydet</button>
     </div>
 
-    <!-- HAREKET -->
     <div class="card">
-        <h2>🏋️ Hareket Ekle</h2>
-        <input id="hareket" placeholder="bench / squat / deadlift">
-        <input id="agirlik" placeholder="kg">
+        <h2>Geçmiş</h2>
+        <div id="kiloListe"></div>
+    </div>
+</div>
+
+<!-- AĞIRLIK -->
+<div id="agirlik" class="page hidden">
+    <h1>🏋️ Ağırlık Takibi</h1>
+
+    <div class="card">
+        <input id="hareket" placeholder="bench / squat">
+        <input id="agirlikInput" placeholder="kg">
         <button onclick="agirlikEkle()">Ekle</button>
     </div>
 
-    <!-- LİSTE -->
     <div class="card">
-        <h2>📜 Kayıtlar</h2>
-        <div id="liste"></div>
+        <h2>Geçmiş</h2>
+        <div id="agirlikListe"></div>
     </div>
-
 </div>
 
 <script src="script.js"></script>
