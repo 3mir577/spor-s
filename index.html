@@ -3,66 +3,62 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fitness App</title>
+<title>Fitness</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="navbar">
-    <button onclick="showPage('home')">🏠 Ana Menü</button>
-    <button onclick="showPage('kilo')">⚖️ Kilo</button>
-    <button onclick="showPage('agirlik')">🏋️ Ağırlık</button>
+<div class="top">
+    Hoş geldin Türk David Laid
+</div>
+
+<div class="nav">
+    <button onclick="show('home')">Ana Menü</button>
+    <button onclick="show('kilo')">Kilo</button>
+    <button onclick="show('agirlik')">Ağırlık</button>
 </div>
 
 <!-- ANA MENÜ -->
 <div id="home" class="page">
-    <h1>🔥 Dashboard</h1>
-
     <div class="card">
-        <h2>Bugünkü Kilo</h2>
-        <p id="bugunKilo">-</p>
+        <h3>Bugünkü Kilo</h3>
+        <p id="todayWeight">-</p>
     </div>
 
     <div class="card">
-        <h2>Bench Max</h2>
-        <p id="benchMax">-</p>
-    </div>
-
-    <div class="card">
-        <h2>Squat Max</h2>
-        <p id="squatMax">-</p>
+        <h3>En Yüksek Ağırlık (PR)</h3>
+        <p id="pr">-</p>
     </div>
 </div>
 
 <!-- KİLO -->
 <div id="kilo" class="page hidden">
-    <h1>⚖️ Kilo Takibi</h1>
-
     <div class="card">
-        <input id="kiloInput" placeholder="Kilo gir">
-        <button onclick="kiloEkle()">Kaydet</button>
+        <h3>Günlük Kilo</h3>
+        <input id="weightInput" placeholder="kg">
+        <button onclick="addWeight()">Kaydet</button>
     </div>
 
-    <div class="card">
-        <h2>Geçmiş</h2>
-        <div id="kiloListe"></div>
-    </div>
+    <div id="weightList"></div>
 </div>
 
 <!-- AĞIRLIK -->
 <div id="agirlik" class="page hidden">
-    <h1>🏋️ Ağırlık Takibi</h1>
-
     <div class="card">
-        <input id="hareket" placeholder="bench / squat">
-        <input id="agirlikInput" placeholder="kg">
-        <button onclick="agirlikEkle()">Ekle</button>
+        <h3>Bench</h3>
+        <p>Son: <span id="benchLast">-</span></p>
+        <input id="benchInput" placeholder="kg">
+        <button onclick="add('bench')">Ekle</button>
     </div>
 
     <div class="card">
-        <h2>Geçmiş</h2>
-        <div id="agirlikListe"></div>
+        <h3>Squat</h3>
+        <p>Son: <span id="squatLast">-</span></p>
+        <input id="squatInput" placeholder="kg">
+        <button onclick="add('squat')">Ekle</button>
     </div>
+
+    <div id="log"></div>
 </div>
 
 <script src="script.js"></script>
