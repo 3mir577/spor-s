@@ -18,7 +18,9 @@
 
 <div class="top">Hoş geldin Türk David Laid</div>
 
+<!-- HOME -->
 <div id="home" class="page">
+
     <div class="card hero">
         <h3>Hedef Kilo</h3>
         <input id="goalInput" placeholder="örn: 75">
@@ -50,8 +52,10 @@
         <h3>Durum</h3>
         <p id="status">-</p>
     </div>
+
 </div>
 
+<!-- KILO -->
 <div id="kilo" class="page hidden">
     <div class="card">
         <h3>Kilo Ekle</h3>
@@ -64,23 +68,146 @@
     </div>
 </div>
 
+<!-- AGIRLIK -->
 <div id="agirlik" class="page hidden">
+
     <div class="card">
-        <h3>Bench</h3>
-        <input id="benchInput" placeholder="kg">
-        <button onclick="addLift('bench')">Ekle</button>
+        <h3>Plate Incline Press</h3>
+        <input id="plate_incline_pressInput" placeholder="kg">
+        <button onclick="addLift('plate_incline_press')">Kaydet</button>
+        <div id="plate_incline_pressHistory"></div>
     </div>
 
     <div class="card">
-        <h3>Squat</h3>
-        <input id="squatInput" placeholder="kg">
-        <button onclick="addLift('squat')">Ekle</button>
+        <h3>Smith Low Incline Press</h3>
+        <input id="smith_low_incline_pressInput" placeholder="kg">
+        <button onclick="addLift('smith_low_incline_press')">Kaydet</button>
+        <div id="smith_low_incline_pressHistory"></div>
     </div>
+
+    <div class="card">
+        <h3>Chest Fly</h3>
+        <input id="chest_flyInput" placeholder="kg">
+        <button onclick="addLift('chest_fly')">Kaydet</button>
+        <div id="chest_flyHistory"></div>
+    </div>
+
+    <div class="card">
+        <h3>Shoulder Press</h3>
+        <input id="machine_shoulder_pressInput" placeholder="kg">
+        <button onclick="addLift('machine_shoulder_press')">Kaydet</button>
+        <div id="machine_shoulder_pressHistory"></div>
+    </div>
+
+    <div class="card">
+        <h3>Lateral Raise</h3>
+        <input id="lateral_raiseInput" placeholder="kg">
+        <button onclick="addLift('lateral_raise')">Kaydet</button>
+        <div id="lateral_raiseHistory"></div>
+    </div>
+
+    <div class="card">
+        <h3>Skullcrusher</h3>
+        <input id="skullcrusherInput" placeholder="kg">
+        <button onclick="addLift('skullcrusher')">Kaydet</button>
+        <div id="skullcrusherHistory"></div>
+    </div>
+
+    <div class="card">
+        <h3>Triceps Pushdown</h3>
+        <input id="triceps_pushdownInput" placeholder="kg">
+        <button onclick="addLift('triceps_pushdown')">Kaydet</button>
+        <div id="triceps_pushdownHistory"></div>
+    </div>
+
+    <div class="card">
+        <h3>Overhead Rope Extension</h3>
+        <input id="overhead_rope_extensionInput" placeholder="kg">
+        <button onclick="addLift('overhead_rope_extension')">Kaydet</button>
+        <div id="overhead_rope_extensionHistory"></div>
+    </div>
+
+    <div class="card">
+        <h3>Lat Pulldown</h3>
+        <input id="lat_pulldownInput" placeholder="kg">
+        <button onclick="addLift('lat_pulldown')">Kaydet</button>
+        <div id="lat_pulldownHistory"></div>
+    </div>
+
+    <div class="card">
+        <h3>Wide Row</h3>
+        <input id="wide_rowInput" placeholder="kg">
+        <button onclick="addLift('wide_row')">Kaydet</button>
+        <div id="wide_rowHistory"></div>
+    </div>
+
+    <div class="card">
+        <h3>Cable Row</h3>
+        <input id="cable_rowInput" placeholder="kg">
+        <button onclick="addLift('cable_row')">Kaydet</button>
+        <div id="cable_rowHistory"></div>
+    </div>
+
+    <div class="card">
+        <h3>Incline Curl</h3>
+        <input id="incline_dumbell_curlInput" placeholder="kg">
+        <button onclick="addLift('incline_dumbell_curl')">Kaydet</button>
+        <div id="incline_dumbell_curlHistory"></div>
+    </div>
+
+    <div class="card">
+        <h3>Cable Curl</h3>
+        <input id="cable_curlInput" placeholder="kg">
+        <button onclick="addLift('cable_curl')">Kaydet</button>
+        <div id="cable_curlHistory"></div>
+    </div>
+
+    <div class="card">
+        <h3>Hammer Curl</h3>
+        <input id="hammer_curlInput" placeholder="kg">
+        <button onclick="addLift('hammer_curl')">Kaydet</button>
+        <div id="hammer_curlHistory"></div>
+    </div>
+
+    <div class="card">
+        <h3>Leg Press</h3>
+        <input id="leg_pressInput" placeholder="kg">
+        <button onclick="addLift('leg_press')">Kaydet</button>
+        <div id="leg_pressHistory"></div>
+    </div>
+
+    <div class="card">
+        <h3>Smith Squat</h3>
+        <input id="smith_squatInput" placeholder="kg">
+        <button onclick="addLift('smith_squat')">Kaydet</button>
+        <div id="smith_squatHistory"></div>
+    </div>
+
+    <div class="card">
+        <h3>Leg Extension</h3>
+        <input id="leg_extensionInput" placeholder="kg">
+        <button onclick="addLift('leg_extension')">Kaydet</button>
+        <div id="leg_extensionHistory"></div>
+    </div>
+
+    <div class="card">
+        <h3>Seated Leg Curl</h3>
+        <input id="seated_leg_curlInput" placeholder="kg">
+        <button onclick="addLift('seated_leg_curl')">Kaydet</button>
+        <div id="seated_leg_curlHistory"></div>
+    </div>
+
 </div>
 
+<!-- STATS -->
 <div id="stats" class="page hidden">
     <div class="card">
         <h3>Progress</h3>
+        <canvas id="weightChart"></canvas>
+    </div>
+
+    <div class="card">
+        <h3>Bench Chart</h3>
         <canvas id="liftChart"></canvas>
     </div>
 
@@ -103,8 +230,6 @@
 if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("service-worker.js");
 }
-
-
 </script>
 
 </body>

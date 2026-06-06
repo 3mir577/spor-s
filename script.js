@@ -2,155 +2,134 @@ let data = JSON.parse(localStorage.getItem("data")) || [];
 let streakData = JSON.parse(localStorage.getItem("streak")) || {};
 let goal = localStorage.getItem("goal") || null;
 
-/* INIT */
-window.onload = () => {
-    setTimeout(() => {
-        document.getElementById("splash").style.display = "none";
-    }, 1000);
+function today(){ return new Date().toLocaleDateString(); }
 
-    update();
-    drawCharts();
-};
-
-function save() {
+function save(){
     localStorage.setItem("data", JSON.stringify(data));
     localStorage.setItem("streak", JSON.stringify(streakData));
     localStorage.setItem("goal", goal);
 }
 
-function today() {
-    return new Date().toLocaleDateString();
-}
-
-function show(page) {
-    document.querySelectorAll(".page").forEach(p => p.classList.add("hidden"));
+function show(page){
+    document.querySelectorAll(".page").forEach(p=>p.classList.add("hidden"));
     document.getElementById(page).classList.remove("hidden");
 }
 
-/* GOAL */
-function setGoal() {
+function setGoal(){
     goal = Number(document.getElementById("goalInput").value);
     save();
     update();
 }
 
-/* WEIGHT (DAILY ONE) */
-function addWeight() {
+/* WEIGHT */
+function addWeight(){
     let w = document.getElementById("weightInput").value;
-    if (!w) return;
-
     let t = today();
 
-    let existing = data.find(d => d.type === "weight" && d.date === t);
+    let e = data.find(d=>d.type==="weight"&&d.date===t);
 
-    if (existing) existing.value = Number(w);
-    else data.push({ type: "weight", value: Number(w), date: t });
+    if(e) e.value = Number(w);
+    else data.push({type:"weight", value:Number(w), date:t});
 
-    updateStreak();
     save();
     update();
-    drawCharts();
+    draw();
 }
 
 /* LIFTS */
-function addLift(type) {
-    let v = document.getElementById(type + "Input").value;
-    if (!v) return;
+function addLift(type){
+    let v = document.getElementById(type+"Input").value;
 
-    data.push({
-        type,
-        value: Number(v),
-        date: today()
-    });
+    data.push({type, value:Number(v), date:today()});
 
     save();
     update();
-    drawCharts();
+    renderHistory();
 }
 
-/* UPDATE UI */
-function update() {
+function update(){
 
-    let w = data.filter(d => d.type === "weight");
+    let w = data.filter(d=>d.type==="weight");
     let last = w.at(-1);
 
     document.getElementById("todayWeight").innerText =
-        last ? last.value + " kg" : "-";
+        last? last.value+" kg":"-";
 
-    let bench = data.filter(d => d.type === "bench");
-    let max = bench.length ? Math.max(...bench.map(x => x.value)) : 0;
+    let bench = data.filter(d=>d.type==="smith_low_incline_press");
+    let max = bench.length?Math.max(...bench.map(x=>x.value)):0;
 
-    document.getElementById("benchMax").innerText = max + " kg";
+    document.getElementById("benchMax").innerText = max+" kg";
 
-    document.getElementById("streak").innerText =
-        (streakData.count || 0) + " gün 🔥";
-
-    document.getElementById("status").innerText =
-        max >= 100 ? "BEAST MODE 🦍" :
-        max >= 80 ? "STRONG 💪" :
-        "BEGINNER 🟡";
-
-    updateGoalBar();
+    updateGoal();
 }
 
-/* GOAL BAR */
-function updateGoalBar() {
-    let w = data.filter(d => d.type === "weight");
+function updateGoal(){
+    let w = data.filter(d=>d.type==="weight");
     let last = w.at(-1);
 
-    if (!goal || !last) return;
+    if(!goal || !last) return;
 
-    let diff = Math.abs(goal - last.value);
-    let percent = Math.max(0, 100 - diff * 5);
+    let p = Math.max(0,100 - Math.abs(goal-last.value)*5);
 
-    document.getElementById("progressBar").style.width = percent + "%";
-    document.getElementById("goalText").innerText = "Hedef: " + goal + " kg";
+    document.getElementById("progressBar").style.width = p+"%";
 }
 
-/* STREAK */
-function updateStreak() {
-    let t = today();
+/* HISTORY */
+const exercises = [
+"plate_incline_press","smith_low_incline_press","chest_fly",
+"machine_shoulder_press","lateral_raise","skullcrusher",
+"triceps_pushdown","overhead_rope_extension","lat_pulldown",
+"wide_row","cable_row","incline_dumbell_curl","cable_curl",
+"hammer_curl","leg_press","smith_squat","leg_extension","seated_leg_curl"
+];
 
-    if (streakData.lastDay !== t) {
-        streakData.count = (streakData.count || 0) + 1;
-        streakData.lastDay = t;
+function renderHistory(){
+    exercises.forEach(ex=>{
+        let c = document.getElementById(ex+"History");
+        if(!c) return;
+
+        c.innerHTML="";
+
+        data.filter(d=>d.type===ex)
+        .slice(-3)
+        .reverse()
+        .forEach(i=>{
+            let div=document.createElement("div");
+            div.style.fontSize="11px";
+            div.style.color="#aaa";
+            div.innerText=i.date+" → "+i.value+"kg";
+            c.appendChild(div);
+        });
+    });
+}
+
+/* SIMPLE CHART */
+let chart;
+function draw(){
+    let w = data.filter(d=>d.type==="weight");
+
+    if(chart) chart.destroy();
+
+    chart = new Chart(document.getElementById("weightChart"),{
+        type:"line",
+        data:{
+            labels:w.map(x=>x.date),
+            datasets:[{
+                data:w.map(x=>x.value),
+                borderColor:"white"
+            }]
+        }
+    });
+}
+
+function updateStreak(){
+    let t = today();
+    if(streakData.last!==t){
+        streakData.count=(streakData.count||0)+1;
+        streakData.last=t;
     }
 }
 
-/* CHART */
-let weightChart, liftChart;
-
-function drawCharts() {
-
-    let w = data.filter(d => d.type === "weight");
-    let b = data.filter(d => d.type === "bench");
-
-    if (weightChart) weightChart.destroy();
-    if (liftChart) liftChart.destroy();
-
-    weightChart = new Chart(document.getElementById("weightChart"), {
-        type: "line",
-        data: {
-            labels: w.map(x => x.date),
-            datasets: [{
-                label: "Kilo",
-                data: w.map(x => x.value),
-                borderColor: "white",
-                tension: 0.4
-            }]
-        }
-    });
-
-    liftChart = new Chart(document.getElementById("liftChart"), {
-        type: "line",
-        data: {
-            labels: b.map(x => x.date),
-            datasets: [{
-                label: "Bench",
-                data: b.map(x => x.value),
-                borderColor: "white",
-                tension: 0.4
-            }]
-        }
-    });
-}
+update();
+draw();
+renderHistory();
