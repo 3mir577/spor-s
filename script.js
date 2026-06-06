@@ -1,5 +1,16 @@
 let data = JSON.parse(localStorage.getItem("data")) || [];
 
+/* SPLASH */
+window.onload = () => {
+    setTimeout(() => {
+        document.getElementById("splash").style.display = "none";
+    }, 1200);
+
+    update();
+    drawCharts();
+};
+
+/* SAVE */
 function save() {
     localStorage.setItem("data", JSON.stringify(data));
     update();
@@ -12,9 +23,11 @@ function show(page) {
     document.getElementById(page).classList.remove("hidden");
 }
 
-/* ADD WEIGHT */
+/* WEIGHT */
 function addWeight() {
     let w = document.getElementById("weightInput").value;
+
+    if (!w) return;
 
     data.push({
         type: "weight",
@@ -25,9 +38,11 @@ function addWeight() {
     save();
 }
 
-/* ADD LIFTS */
-function add(type) {
+/* LIFTS */
+function addLift(type) {
     let val = document.getElementById(type + "Input").value;
+
+    if (!val) return;
 
     data.push({
         type,
@@ -38,11 +53,11 @@ function add(type) {
     save();
 }
 
-/* UPDATE DASHBOARD */
+/* UPDATE */
 function update() {
 
-    let weights = data.filter(d => d.type === "weight");
-    let last = weights.slice(-1)[0];
+    let w = data.filter(d => d.type === "weight");
+    let last = w[w.length - 1];
 
     document.getElementById("todayWeight").innerText =
         last ? last.value + " kg" : "-";
@@ -52,54 +67,8 @@ function update() {
     document.getElementById("benchMax").innerText =
         bench.length ? Math.max(...bench.map(x => x.value)) + " kg" : "-";
 
-    achievements();
     analysis();
-}
-
-/* CHART FIX */
-let weightChartInstance;
-let liftChartInstance;
-
-function drawCharts() {
-
-    let weights = data.filter(d => d.type === "weight");
-    let bench = data.filter(d => d.type === "bench");
-
-    if (weightChartInstance) weightChartInstance.destroy();
-    if (liftChartInstance) liftChartInstance.destroy();
-
-    weightChartInstance = new Chart(document.getElementById("weightChart"), {
-        type: "line",
-        data: {
-            labels: weights.map(x => x.date),
-            datasets: [{
-                label: "Kilo",
-                data: weights.map(x => x.value),
-                borderColor: "white"
-            }]
-        }
-    });
-
-    liftChartInstance = new Chart(document.getElementById("liftChart"), {
-        type: "line",
-        data: {
-            labels: bench.map(x => x.date),
-            datasets: [{
-                label: "Bench",
-                data: bench.map(x => x.value),
-                borderColor: "white"
-            }]
-        }
-    });
-}
-
-/* ACHIEVEMENT */
-function achievements() {
-    let bench = data.filter(d => d.type === "bench");
-    let max = bench.length ? Math.max(...bench.map(x => x.value)) : 0;
-
-    if (max >= 100) notify("🏆 100kg Bench!");
-    else if (max >= 80) notify("🔥 Güçleniyorsun");
+    achievements();
 }
 
 /* ANALYSIS */
@@ -114,6 +83,15 @@ function analysis() {
     else if (last > prev) notify("📈 Artış var");
 }
 
+/* ACHIEVEMENTS */
+function achievements() {
+    let bench = data.filter(d => d.type === "bench");
+    let max = bench.length ? Math.max(...bench.map(x => x.value)) : 0;
+
+    if (max >= 100) notify("🏆 100kg Bench!");
+    else if (max >= 80) notify("🔥 Güçleniyorsun");
+}
+
 /* NOTIFY */
 function notify(msg) {
     let n = document.createElement("div");
@@ -123,10 +101,10 @@ function notify(msg) {
     n.style.top = "15px";
     n.style.left = "50%";
     n.style.transform = "translateX(-50%)";
-    n.style.background = "rgba(20,20,20,0.9)";
+    n.style.background = "rgba(0,0,0,0.85)";
     n.style.border = "1px solid #333";
-    n.style.padding = "10px 14px";
-    n.style.borderRadius = "12px";
+    n.style.padding = "10px";
+    n.style.borderRadius = "10px";
     n.style.color = "white";
     n.style.fontSize = "12px";
     n.style.zIndex = "9999";
@@ -136,5 +114,39 @@ function notify(msg) {
     setTimeout(() => n.remove(), 2000);
 }
 
-update();
-drawCharts();
+/* CHARTS */
+let weightChart;
+let liftChart;
+
+function drawCharts() {
+
+    let w = data.filter(d => d.type === "weight");
+    let b = data.filter(d => d.type === "bench");
+
+    if (weightChart) weightChart.destroy();
+    if (liftChart) liftChart.destroy();
+
+    weightChart = new Chart(document.getElementById("weightChart"), {
+        type: "line",
+        data: {
+            labels: w.map(x => x.date),
+            datasets: [{
+                label: "Kilo",
+                data: w.map(x => x.value),
+                borderColor: "white"
+            }]
+        }
+    });
+
+    liftChart = new Chart(document.getElementById("liftChart"), {
+        type: "line",
+        data: {
+            labels: b.map(x => x.date),
+            datasets: [{
+                label: "Bench",
+                data: b.map(x => x.value),
+                borderColor: "white"
+            }]
+        }
+    });
+}

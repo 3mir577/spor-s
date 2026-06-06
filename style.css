@@ -1,11 +1,10 @@
 body {
     margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, Arial;
+    font-family: Arial;
     background: #000;
-    color: #fff;
+    color: white;
 }
 
-/* TOP */
 .top {
     text-align: center;
     padding: 12px;
@@ -14,28 +13,19 @@ body {
     border-bottom: 1px solid #111;
 }
 
-/* PAGE */
 .page {
     padding: 14px;
     padding-bottom: 80px;
-    animation: fade 0.2s ease;
 }
 
 .hidden {
     display: none;
 }
 
-@keyframes fade {
-    from {opacity: 0; transform: translateY(10px);}
-    to {opacity: 1; transform: translateY(0);}
-}
-
-/* CARD (GLASS STYLE) */
 .card {
-    background: rgba(20,20,20,0.6);
-    border: 1px solid rgba(255,255,255,0.08);
-    backdrop-filter: blur(12px);
-    border-radius: 16px;
+    background: rgba(20,20,20,0.7);
+    border: 1px solid #222;
+    border-radius: 14px;
     padding: 14px;
     margin-top: 12px;
     transition: 0.2s ease;
@@ -43,60 +33,44 @@ body {
 
 .card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 10px 30px rgba(255,255,255,0.05);
-    border-color: rgba(255,255,255,0.2);
+    border-color: #444;
 }
 
-/* TEXT */
 h3 {
     font-size: 12px;
     color: #888;
-    margin: 0 0 6px 0;
 }
 
 p {
     font-size: 20px;
-    margin: 0;
 }
 
-/* INPUT */
 input {
     width: 100%;
-    padding: 9px;
+    padding: 8px;
     margin-top: 8px;
-    background: #000;
-    border: 1px solid #222;
+    background: black;
+    border: 1px solid #333;
     color: white;
     border-radius: 10px;
-    font-size: 12px;
 }
 
-/* BUTTON */
 button {
     width: 100%;
     padding: 10px;
     margin-top: 10px;
-    background: #fff;
-    color: #000;
+    background: white;
+    color: black;
     border: none;
     border-radius: 12px;
-    font-weight: 600;
-    transition: 0.2s ease;
 }
 
-button:hover {
-    background: #e6e6e6;
-    transform: scale(1.02);
-}
-
-/* NAV */
 .bottom-nav {
     position: fixed;
     bottom: 0;
-    left: 0;
-    right: 0;
+    width: 100%;
     height: 55px;
-    background: rgba(0,0,0,0.95);
+    background: black;
     border-top: 1px solid #111;
     display: flex;
     justify-content: space-around;
@@ -106,30 +80,25 @@ button:hover {
 .bottom-nav button {
     background: none;
     border: none;
-    color: #666;
+    color: gray;
     font-size: 16px;
 }
 
 .bottom-nav button:hover {
     color: white;
-    transform: translateY(-2px);
 }
 
-/* SPLASH */
 #splash {
     position: fixed;
     inset: 0;
-    background: #000;
+    background: black;
     display: flex;
-    justify-content: center;
     align-items: center;
-    font-size: 14px;
-    letter-spacing: 4px;
+    justify-content: center;
     z-index: 9999;
-    animation: splash 1.5s forwards;
+    animation: fade 1.5s forwards;
 }
 
-@keyframes splash {
-    0% {opacity: 1;}
-    100% {opacity: 0; visibility: hidden;}
+@keyframes fade {
+    to {opacity: 0; visibility: hidden;}
 }
