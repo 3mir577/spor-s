@@ -1,37 +1,50 @@
 let data = JSON.parse(localStorage.getItem("data")) || [];
 let streakData = JSON.parse(localStorage.getItem("streak")) || {};
+let goal = localStorage.getItem("goal") || null;
 
+/* INIT */
 window.onload = () => {
     setTimeout(() => {
         document.getElementById("splash").style.display = "none";
-    }, 1200);
+    }, 1000);
 
     update();
     drawCharts();
 };
 
-/* SAVE */
 function save() {
     localStorage.setItem("data", JSON.stringify(data));
     localStorage.setItem("streak", JSON.stringify(streakData));
+    localStorage.setItem("goal", goal);
 }
 
-/* PAGE */
+function today() {
+    return new Date().toLocaleDateString();
+}
+
 function show(page) {
     document.querySelectorAll(".page").forEach(p => p.classList.add("hidden"));
     document.getElementById(page).classList.remove("hidden");
 }
 
-/* WEIGHT */
+/* GOAL */
+function setGoal() {
+    goal = Number(document.getElementById("goalInput").value);
+    save();
+    update();
+}
+
+/* WEIGHT (DAILY ONE) */
 function addWeight() {
     let w = document.getElementById("weightInput").value;
     if (!w) return;
 
-    data.push({
-        type: "weight",
-        value: Number(w),
-        date: new Date().toLocaleDateString()
-    });
+    let t = today();
+
+    let existing = data.find(d => d.type === "weight" && d.date === t);
+
+    if (existing) existing.value = Number(w);
+    else data.push({ type: "weight", value: Number(w), date: t });
 
     updateStreak();
     save();
@@ -41,13 +54,13 @@ function addWeight() {
 
 /* LIFTS */
 function addLift(type) {
-    let val = document.getElementById(type + "Input").value;
-    if (!val) return;
+    let v = document.getElementById(type + "Input").value;
+    if (!v) return;
 
     data.push({
         type,
-        value: Number(val),
-        date: new Date().toLocaleDateString()
+        value: Number(v),
+        date: today()
     });
 
     save();
@@ -58,8 +71,8 @@ function addLift(type) {
 /* UPDATE UI */
 function update() {
 
-    let weights = data.filter(d => d.type === "weight");
-    let last = weights.at(-1);
+    let w = data.filter(d => d.type === "weight");
+    let last = w.at(-1);
 
     document.getElementById("todayWeight").innerText =
         last ? last.value + " kg" : "-";
@@ -73,48 +86,39 @@ function update() {
         (streakData.count || 0) + " gün 🔥";
 
     document.getElementById("status").innerText =
-        max >= 100 ? "Beast Mode 🦍" :
-        max >= 80 ? "Strong 💪" :
-        "Başlangıç 🟡";
+        max >= 100 ? "BEAST MODE 🦍" :
+        max >= 80 ? "STRONG 💪" :
+        "BEGINNER 🟡";
 
-    weeklyAnalysis();
+    updateGoalBar();
 }
 
-/* STREAK SYSTEM */
-function updateStreak() {
-    let today = new Date().toLocaleDateString();
-
-    if (streakData.lastDay !== today) {
-        streakData.count = (streakData.count || 0) + 1;
-        streakData.lastDay = today;
-    }
-}
-
-/* WEEKLY ANALYSIS */
-function weeklyAnalysis() {
+/* GOAL BAR */
+function updateGoalBar() {
     let w = data.filter(d => d.type === "weight");
+    let last = w.at(-1);
 
-    if (w.length < 2) {
-        document.getElementById("weekly").innerText = "-";
-        return;
-    }
+    if (!goal || !last) return;
 
-    let first = w[0].value;
-    let last = w[w.length - 1].value;
+    let diff = Math.abs(goal - last.value);
+    let percent = Math.max(0, 100 - diff * 5);
 
-    let diff = (last - first).toFixed(1);
-
-    document.getElementById("weekly").innerText =
-        diff < 0
-            ? "📉 İyi gidiyorsun " + diff + "kg düşüş"
-            : diff > 0
-                ? "📈 + " + diff + "kg artış"
-                : "⚖️ Stabil";
+    document.getElementById("progressBar").style.width = percent + "%";
+    document.getElementById("goalText").innerText = "Hedef: " + goal + " kg";
 }
 
-/* CHARTS */
-let weightChart;
-let liftChart;
+/* STREAK */
+function updateStreak() {
+    let t = today();
+
+    if (streakData.lastDay !== t) {
+        streakData.count = (streakData.count || 0) + 1;
+        streakData.lastDay = t;
+    }
+}
+
+/* CHART */
+let weightChart, liftChart;
 
 function drawCharts() {
 
@@ -131,7 +135,8 @@ function drawCharts() {
             datasets: [{
                 label: "Kilo",
                 data: w.map(x => x.value),
-                borderColor: "white"
+                borderColor: "white",
+                tension: 0.4
             }]
         }
     });
@@ -143,7 +148,8 @@ function drawCharts() {
             datasets: [{
                 label: "Bench",
                 data: b.map(x => x.value),
-                borderColor: "white"
+                borderColor: "white",
+                tension: 0.4
             }]
         }
     });

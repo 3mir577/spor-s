@@ -1,11 +1,10 @@
 body {
     margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, Arial;
+    font-family: -apple-system, Arial;
     background: #000;
     color: white;
 }
 
-/* TOP */
 .top {
     text-align: center;
     padding: 12px;
@@ -14,29 +13,21 @@ body {
     border-bottom: 1px solid #111;
 }
 
-/* PAGE */
 .page {
     padding: 14px;
     padding-bottom: 80px;
-    animation: fade 0.25s ease;
 }
 
 .hidden { display: none; }
 
-@keyframes fade {
-    from {opacity: 0; transform: translateY(10px);}
-    to {opacity: 1; transform: translateY(0);}
-}
-
-/* CARD */
 .card {
-    background: rgba(25,25,25,0.55);
+    background: rgba(20,20,20,0.6);
     border: 1px solid rgba(255,255,255,0.08);
     border-radius: 16px;
     padding: 14px;
     margin-top: 12px;
-    backdrop-filter: blur(12px);
-    transition: 0.2s ease;
+    backdrop-filter: blur(10px);
+    transition: 0.2s;
 }
 
 .card:hover {
@@ -44,54 +35,50 @@ body {
     border-color: rgba(255,255,255,0.2);
 }
 
-/* TEXT */
+.hero {
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
 h3 {
     font-size: 12px;
     color: #888;
-    margin: 0 0 6px 0;
 }
 
 p {
     font-size: 20px;
-    margin: 0;
 }
 
-/* INPUT */
 input {
     width: 100%;
     padding: 10px;
     margin-top: 8px;
-    background: #000;
+    background: black;
     border: 1px solid #222;
-    border-radius: 10px;
     color: white;
+    border-radius: 10px;
 }
 
-/* BUTTON */
 button {
     width: 100%;
     padding: 10px;
     margin-top: 10px;
-    border-radius: 12px;
-    border: none;
     background: white;
     color: black;
+    border: none;
+    border-radius: 12px;
     font-weight: bold;
-    transition: 0.2s;
 }
 
 button:hover {
     transform: scale(1.02);
-    background: #eaeaea;
 }
 
-/* NAV */
 .bottom-nav {
     position: fixed;
     bottom: 0;
     width: 100%;
     height: 55px;
-    background: #000;
+    background: black;
     border-top: 1px solid #111;
     display: flex;
     justify-content: space-around;
@@ -101,15 +88,28 @@ button:hover {
 .bottom-nav button {
     background: none;
     border: none;
-    color: #666;
-    font-size: 16px;
+    color: gray;
 }
 
 .bottom-nav button:hover {
     color: white;
 }
 
-/* SPLASH */
+.progress {
+    width: 100%;
+    height: 8px;
+    background: #111;
+    border-radius: 10px;
+    margin-top: 10px;
+    overflow: hidden;
+}
+
+#progressBar {
+    height: 100%;
+    width: 0%;
+    background: white;
+}
+
 #splash {
     position: fixed;
     inset: 0;
@@ -117,12 +117,10 @@ button:hover {
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 14px;
-    letter-spacing: 4px;
     z-index: 9999;
-    animation: splash 1.3s forwards;
+    animation: fade 1.2s forwards;
 }
 
-@keyframes splash {
+@keyframes fade {
     100% {opacity: 0; visibility: hidden;}
 }
