@@ -8,26 +8,38 @@
 </head>
 <body>
 
+<div class="topbar">
+    <h1>🏋️ Spor Paneli</h1>
+</div>
+
 <div class="container">
 
-    <h1>🏋️ Spor Takip</h1>
-    <p class="sub">Kendi gelişimini takip et</p>
-
+    <!-- ANA MENÜ -->
     <div class="card">
-        <h2>📅 Kilo Ekle</h2>
-        <input id="kilo" placeholder="Bugünkü kilo">
-        <button onclick="kiloEkle()">Ekle</button>
+        <h2>📊 Özet</h2>
+        <p id="bugunKilo">Bugünkü kilo: -</p>
+        <p id="benchMax">Bench Max: -</p>
+        <p id="squatMax">Squat Max: -</p>
     </div>
 
+    <!-- KİLO -->
     <div class="card">
-        <h2>🏋️ Ağırlık Ekle</h2>
-        <input id="hareket" placeholder="Hareket (bench vs)">
-        <input id="agirlik" placeholder="Ağırlık (kg)">
+        <h2>📅 Kilo Ekle</h2>
+        <input id="kilo" placeholder="Kilo">
+        <button onclick="kiloEkle()">Kaydet</button>
+    </div>
+
+    <!-- HAREKET -->
+    <div class="card">
+        <h2>🏋️ Hareket Ekle</h2>
+        <input id="hareket" placeholder="bench / squat / deadlift">
+        <input id="agirlik" placeholder="kg">
         <button onclick="agirlikEkle()">Ekle</button>
     </div>
 
+    <!-- LİSTE -->
     <div class="card">
-        <h2>📊 Kayıtlar</h2>
+        <h2>📜 Kayıtlar</h2>
         <div id="liste"></div>
     </div>
 
