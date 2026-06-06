@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fitness App</title>
+<title>Fitness Pro Max</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <link rel="stylesheet" href="style.css">
@@ -11,7 +11,7 @@
 
 <body>
 
-<div id="splash">FITNESS PRO</div>
+<div id="splash">FITNESS PRO MAX</div>
 
 <div class="top">Hoş geldin Türk David Laid</div>
 
@@ -23,15 +23,25 @@
     </div>
 
     <div class="card">
+        <h3>Streak</h3>
+        <p id="streak">0 gün 🔥</p>
+    </div>
+
+    <div class="card">
         <h3>Bench PR</h3>
         <p id="benchMax">-</p>
+    </div>
+
+    <div class="card">
+        <h3>Durum</h3>
+        <p id="status">-</p>
     </div>
 </div>
 
 <!-- KILO -->
 <div id="kilo" class="page hidden">
     <div class="card">
-        <h3>Kilo Ekle</h3>
+        <h3>Günlük Kilo</h3>
         <input id="weightInput" placeholder="kg">
         <button onclick="addWeight()">Kaydet</button>
     </div>
@@ -59,8 +69,13 @@
 <!-- STATS -->
 <div id="stats" class="page hidden">
     <div class="card">
-        <h3>Progress</h3>
+        <h3>Progress Chart</h3>
         <canvas id="liftChart"></canvas>
+    </div>
+
+    <div class="card">
+        <h3>Haftalık Analiz</h3>
+        <p id="weekly">-</p>
     </div>
 </div>
 

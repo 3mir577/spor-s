@@ -1,6 +1,6 @@
 let data = JSON.parse(localStorage.getItem("data")) || [];
+let streakData = JSON.parse(localStorage.getItem("streak")) || {};
 
-/* SPLASH */
 window.onload = () => {
     setTimeout(() => {
         document.getElementById("splash").style.display = "none";
@@ -13,8 +13,7 @@ window.onload = () => {
 /* SAVE */
 function save() {
     localStorage.setItem("data", JSON.stringify(data));
-    update();
-    drawCharts();
+    localStorage.setItem("streak", JSON.stringify(streakData));
 }
 
 /* PAGE */
@@ -26,7 +25,6 @@ function show(page) {
 /* WEIGHT */
 function addWeight() {
     let w = document.getElementById("weightInput").value;
-
     if (!w) return;
 
     data.push({
@@ -35,13 +33,15 @@ function addWeight() {
         date: new Date().toLocaleDateString()
     });
 
+    updateStreak();
     save();
+    update();
+    drawCharts();
 }
 
 /* LIFTS */
 function addLift(type) {
     let val = document.getElementById(type + "Input").value;
-
     if (!val) return;
 
     data.push({
@@ -51,67 +51,65 @@ function addLift(type) {
     });
 
     save();
+    update();
+    drawCharts();
 }
 
-/* UPDATE */
+/* UPDATE UI */
 function update() {
 
-    let w = data.filter(d => d.type === "weight");
-    let last = w[w.length - 1];
+    let weights = data.filter(d => d.type === "weight");
+    let last = weights.at(-1);
 
     document.getElementById("todayWeight").innerText =
         last ? last.value + " kg" : "-";
 
     let bench = data.filter(d => d.type === "bench");
-
-    document.getElementById("benchMax").innerText =
-        bench.length ? Math.max(...bench.map(x => x.value)) + " kg" : "-";
-
-    analysis();
-    achievements();
-}
-
-/* ANALYSIS */
-function analysis() {
-    let w = data.filter(d => d.type === "weight");
-    if (w.length < 2) return;
-
-    let last = w[w.length - 1].value;
-    let prev = w[w.length - 2].value;
-
-    if (last < prev) notify("📉 İyi gidiyorsun");
-    else if (last > prev) notify("📈 Artış var");
-}
-
-/* ACHIEVEMENTS */
-function achievements() {
-    let bench = data.filter(d => d.type === "bench");
     let max = bench.length ? Math.max(...bench.map(x => x.value)) : 0;
 
-    if (max >= 100) notify("🏆 100kg Bench!");
-    else if (max >= 80) notify("🔥 Güçleniyorsun");
+    document.getElementById("benchMax").innerText = max + " kg";
+
+    document.getElementById("streak").innerText =
+        (streakData.count || 0) + " gün 🔥";
+
+    document.getElementById("status").innerText =
+        max >= 100 ? "Beast Mode 🦍" :
+        max >= 80 ? "Strong 💪" :
+        "Başlangıç 🟡";
+
+    weeklyAnalysis();
 }
 
-/* NOTIFY */
-function notify(msg) {
-    let n = document.createElement("div");
+/* STREAK SYSTEM */
+function updateStreak() {
+    let today = new Date().toLocaleDateString();
 
-    n.innerText = msg;
-    n.style.position = "fixed";
-    n.style.top = "15px";
-    n.style.left = "50%";
-    n.style.transform = "translateX(-50%)";
-    n.style.background = "rgba(0,0,0,0.85)";
-    n.style.border = "1px solid #333";
-    n.style.padding = "10px";
-    n.style.borderRadius = "10px";
-    n.style.color = "white";
-    n.style.fontSize = "12px";
-    n.style.zIndex = "9999";
+    if (streakData.lastDay !== today) {
+        streakData.count = (streakData.count || 0) + 1;
+        streakData.lastDay = today;
+    }
+}
 
-    document.body.appendChild(n);
+/* WEEKLY ANALYSIS */
+function weeklyAnalysis() {
+    let w = data.filter(d => d.type === "weight");
 
-    setTimeout(() => n.remove(), 2000);
+    if (w.length < 2) {
+        document.getElementById("weekly").innerText = "-";
+        return;
+    }
+
+    let first = w[0].value;
+    let last = w[w.length - 1].value;
+
+    let diff = (last - first).toFixed(1);
+
+    document.getElementById("weekly").innerText =
+        diff < 0
+            ? "📉 İyi gidiyorsun " + diff + "kg düşüş"
+            : diff > 0
+                ? "📈 + " + diff + "kg artış"
+                : "⚖️ Stabil";
 }
 
 /* CHARTS */
