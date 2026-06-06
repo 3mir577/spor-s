@@ -113,3 +113,72 @@ button {
     0% {opacity: 1;}
     100% {opacity: 0; visibility: hidden;}
 }
+
+.card:hover {
+    transform: scale(1.02);
+    border-color: #3a3a3a;
+    box-shadow: 0 0 20px rgba(255,255,255,0.05);
+    background: linear-gradient(145deg, #121212, #0a0a0a);
+}
+
+button:hover {
+    background: #e6e6e6;
+    transform: scale(1.02);
+    transition: 0.2s ease;
+}
+
+.bottom-nav button:hover {
+    color: #fff;
+    transform: translateY(-2px);
+    transition: 0.2s ease;
+}
+
+.card {
+    background: rgba(18, 18, 18, 0.7);
+    border: 1px solid rgba(255,255,255,0.06);
+    backdrop-filter: blur(12px);
+    border-radius: 18px;
+    padding: 14px;
+    margin-top: 12px;
+    transition: 0.25s ease;
+}
+
+.card:hover {
+    transform: translateY(-3px) scale(1.01);
+    border-color: rgba(255,255,255,0.15);
+    box-shadow: 0 10px 30px rgba(255,255,255,0.06);
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    background: #fff;
+    color: #000;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    transition: 0.2s ease;
+}
+
+button:hover {
+    background: #e6e6e6;
+    transform: scale(1.02);
+}
+
+.page {
+    padding: 14px;
+    padding-bottom: 80px;
+    animation: slide 0.25s ease;
+}
+
+@keyframes slide {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

@@ -147,5 +147,76 @@ function update() {
     analyze();
 }
 
+let streak = 0;
+
+function updateStreak() {
+    let today = new Date().toLocaleDateString();
+    let last = localStorage.getItem("lastDay");
+
+    if (last !== today) {
+        streak++;
+        localStorage.setItem("lastDay", today);
+    }
+}
+
+function achievements() {
+    let bench = data.filter(d => d.type === "bench");
+    let max = bench.length ? Math.max(...bench.map(x => x.value)) : 0;
+
+    if (max >= 100) notify("🏆 100kg Bench: Güç unlocked");
+    else if (max >= 80) notify("🔥 Güçleniyorsun");
+}
+
+function analysis() {
+    let w = data.filter(d => d.type === "weight");
+
+    if (w.length < 2) return;
+
+    let last = w[w.length - 1].value;
+    let prev = w[w.length - 2].value;
+
+    if (last < prev) {
+        notify("📉 İyi gidiyorsun, yağ kaybediyorsun");
+    } else if (last > prev) {
+        notify("📈 Biraz artış var");
+    } else {
+        notify("⚖️ Stabil ilerleme");
+    }
+}
+
+function notify(msg) {
+    let n = document.createElement("div");
+
+    n.innerText = msg;
+    n.style.position = "fixed";
+    n.style.top = "15px";
+    n.style.left = "50%";
+    n.style.transform = "translateX(-50%)";
+    n.style.background = "rgba(20,20,20,0.9)";
+    n.style.border = "1px solid #333";
+    n.style.padding = "10px 14px";
+    n.style.borderRadius = "12px";
+    n.style.color = "white";
+    n.style.fontSize = "12px";
+    n.style.zIndex = "9999";
+    n.style.backdropFilter = "blur(10px)";
+
+    document.body.appendChild(n);
+
+    setTimeout(() => n.remove(), 2200);
+}
+
+function update() {
+    let w = data.filter(d => d.type === "weight");
+    let last = w.slice(-1)[0];
+
+    document.getElementById("todayWeight").innerText =
+        last ? last.value + " kg" : "-";
+
+    achievements();
+    analysis();
+    updateStreak();
+}
+
 update();
 drawCharts();
