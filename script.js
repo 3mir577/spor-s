@@ -3,67 +3,87 @@ let data = JSON.parse(localStorage.getItem("data")) || [];
 function save() {
     localStorage.setItem("data", JSON.stringify(data));
     update();
+    drawCharts();
 }
 
+/* PAGE SYSTEM */
 function show(page) {
     document.querySelectorAll(".page").forEach(p => p.classList.add("hidden"));
     document.getElementById(page).classList.remove("hidden");
 }
 
+/* WEIGHT */
 function addWeight() {
     let w = document.getElementById("weightInput").value;
 
     data.push({
         type: "weight",
-        value: w,
+        value: Number(w),
         date: new Date().toLocaleDateString()
     });
 
     save();
 }
 
+/* LIFTS */
 function add(type) {
-    let input = document.getElementById(type + "Input").value;
+    let val = document.getElementById(type + "Input").value;
 
     data.push({
-        type: "lift",
-        lift: type,
-        value: Number(input),
+        type: type,
+        value: Number(val),
         date: new Date().toLocaleDateString()
     });
 
     save();
 }
 
+/* UPDATE DASHBOARD */
 function update() {
 
-    let weights = data.filter(d => d.type === "weight");
-    let lastWeight = weights.slice(-1)[0];
+    let w = data.filter(d => d.type === "weight");
+    let last = w.slice(-1)[0];
 
     document.getElementById("todayWeight").innerText =
-        lastWeight ? lastWeight.value + " kg" : "-";
+        last ? last.value + " kg" : "-";
 
-    let lifts = data.filter(d => d.type === "lift");
+    let bench = data.filter(d => d.type === "bench");
 
-    let bench = lifts.filter(l => l.lift === "bench");
-    let squat = lifts.filter(l => l.lift === "squat");
+    document.getElementById("benchMax").innerText =
+        bench.length ? Math.max(...bench.map(x => x.value)) + " kg" : "-";
+}
 
-    let benchMax = bench.length ? Math.max(...bench.map(l => l.value)) : "-";
-    let squatMax = squat.length ? Math.max(...squat.map(l => l.value)) : "-";
+/* CHARTS */
+function drawCharts() {
 
-    document.getElementById("pr").innerText =
-        "Bench: " + benchMax + " | Squat: " + squatMax;
+    let weights = data.filter(d => d.type === "weight");
 
-    document.getElementById("benchLast").innerText =
-        bench.slice(-1)[0]?.value || "-";
+    new Chart(document.getElementById("weightChart"), {
+        type: "line",
+        data: {
+            labels: weights.map(x => x.date),
+            datasets: [{
+                label: "Kilo",
+                data: weights.map(x => x.value),
+                borderColor: "white"
+            }]
+        }
+    });
 
-    document.getElementById("squatLast").innerText =
-        squat.slice(-1)[0]?.value || "-";
+    let bench = data.filter(d => d.type === "bench");
 
-    document.getElementById("log").innerHTML =
-        lifts.slice().reverse().map(l =>
-            `<p>${l.date} - ${l.lift}: ${l.value} kg</p>`
-        ).join("");
+    new Chart(document.getElementById("liftChart"), {
+        type: "line",
+        data: {
+            labels: bench.map(x => x.date),
+            datasets: [{
+                label: "Bench",
+                data: bench.map(x => x.value),
+                borderColor: "white"
+            }]
+        }
+    });
 }
 
 update();
+drawCharts();

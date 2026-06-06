@@ -4,74 +4,68 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fitness App</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-<div class="top">
-    Hoş geldin Türk David Laid
-</div>
+<div class="top">Hoş geldin Türk David Laid</div>
 
-<!-- NAV -->
-<div class="nav">
-    <button onclick="show('home')">Ana Menü</button>
-    <button onclick="show('kilo')">Kilo</button>
-    <button onclick="show('agirlik')">Ağırlık</button>
-</div>
+<!-- PAGES -->
 
-<!-- HOME -->
 <div id="home" class="page">
-
     <div class="card">
         <h3>Bugünkü Kilo</h3>
         <p id="todayWeight">-</p>
     </div>
 
     <div class="card">
-        <h3>PR (En Yüksek)</h3>
-        <p id="pr">-</p>
+        <h3>Bench PR</h3>
+        <p id="benchMax">-</p>
     </div>
-
 </div>
 
-<!-- KILO -->
 <div id="kilo" class="page hidden">
-
     <div class="card">
-        <h3>Günlük Kilo Ekle</h3>
+        <h3>Kilo Ekle</h3>
         <input id="weightInput" placeholder="kg">
         <button onclick="addWeight()">Kaydet</button>
     </div>
 
     <div class="card">
-        <h3>Geçmiş Kilo</h3>
-        <div id="weightList"></div>
+        <canvas id="weightChart"></canvas>
     </div>
-
 </div>
 
-<!-- AGIRLIK -->
 <div id="agirlik" class="page hidden">
-
     <div class="card">
         <h3>Bench</h3>
         <input id="benchInput" placeholder="kg">
         <button onclick="add('bench')">Ekle</button>
-        <p>Son: <span id="benchLast">-</span></p>
     </div>
 
     <div class="card">
         <h3>Squat</h3>
         <input id="squatInput" placeholder="kg">
         <button onclick="add('squat')">Ekle</button>
-        <p>Son: <span id="squatLast">-</span></p>
     </div>
+</div>
 
+<div id="stats" class="page hidden">
     <div class="card">
-        <h3>Geçmiş</h3>
-        <div id="log"></div>
+        <h3>Progress</h3>
+        <canvas id="liftChart"></canvas>
     </div>
+</div>
 
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+    <button onclick="show('home')">🏠</button>
+    <button onclick="show('kilo')">⚖️</button>
+    <button onclick="show('agirlik')">🏋️</button>
+    <button onclick="show('stats')">📊</button>
 </div>
 
 <script src="script.js"></script>
