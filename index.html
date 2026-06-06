@@ -1,19 +1,38 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <title>Spor Takip</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spor Takip</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <h1>🏋️ Spor Takip Sitem</h1>
+<div class="container">
 
-    <input id="kilo" placeholder="Bugünkü kilo">
-    <button onclick="kaydet()">Kaydet</button>
+    <h1>🏋️ Spor Takip</h1>
+    <p class="sub">Kendi gelişimini takip et</p>
 
-    <p id="sonuc"></p>
+    <div class="card">
+        <h2>📅 Kilo Ekle</h2>
+        <input id="kilo" placeholder="Bugünkü kilo">
+        <button onclick="kiloEkle()">Ekle</button>
+    </div>
 
-    <script src="script.js"></script>
+    <div class="card">
+        <h2>🏋️ Ağırlık Ekle</h2>
+        <input id="hareket" placeholder="Hareket (bench vs)">
+        <input id="agirlik" placeholder="Ağırlık (kg)">
+        <button onclick="agirlikEkle()">Ekle</button>
+    </div>
+
+    <div class="card">
+        <h2>📊 Kayıtlar</h2>
+        <div id="liste"></div>
+    </div>
+
+</div>
+
+<script src="script.js"></script>
 </body>
 </html>

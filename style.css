@@ -1,9 +1,62 @@
 body {
+    margin: 0;
     font-family: Arial;
+    background: #0f0f0f;
+    color: white;
+}
+
+.container {
+    max-width: 500px;
+    margin: auto;
+    padding: 20px;
+}
+
+h1 {
     text-align: center;
-    margin-top: 50px;
+    margin-bottom: 5px;
+}
+
+.sub {
+    text-align: center;
+    color: gray;
+    margin-bottom: 20px;
+}
+
+.card {
+    background: #1c1c1c;
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
 }
 
 input {
+    width: 100%;
     padding: 10px;
+    margin-top: 8px;
+    border: none;
+    border-radius: 8px;
+    outline: none;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    background: #00ff88;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #00cc6a;
+}
+
+#liste p {
+    background: #2a2a2a;
+    padding: 8px;
+    border-radius: 6px;
+    margin-top: 5px;
 }
