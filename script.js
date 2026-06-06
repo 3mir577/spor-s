@@ -1,6 +1,5 @@
 let data = JSON.parse(localStorage.getItem("data")) || [];
 
-/* SAVE */
 function save() {
     localStorage.setItem("data", JSON.stringify(data));
     update();
@@ -39,7 +38,7 @@ function add(type) {
     save();
 }
 
-/* UPDATE (TEK VE DOĞRU) */
+/* UPDATE DASHBOARD */
 function update() {
 
     let weights = data.filter(d => d.type === "weight");
@@ -58,43 +57,40 @@ function update() {
 }
 
 /* CHART FIX */
+let weightChartInstance;
+let liftChartInstance;
+
 function drawCharts() {
 
     let weights = data.filter(d => d.type === "weight");
     let bench = data.filter(d => d.type === "bench");
 
-    if (window.weightChartInstance) window.weightChartInstance.destroy();
-    if (window.liftChartInstance) window.liftChartInstance.destroy();
+    if (weightChartInstance) weightChartInstance.destroy();
+    if (liftChartInstance) liftChartInstance.destroy();
 
-    window.weightChartInstance = new Chart(
-        document.getElementById("weightChart"),
-        {
-            type: "line",
-            data: {
-                labels: weights.map(x => x.date),
-                datasets: [{
-                    label: "Kilo",
-                    data: weights.map(x => x.value),
-                    borderColor: "white"
-                }]
-            }
+    weightChartInstance = new Chart(document.getElementById("weightChart"), {
+        type: "line",
+        data: {
+            labels: weights.map(x => x.date),
+            datasets: [{
+                label: "Kilo",
+                data: weights.map(x => x.value),
+                borderColor: "white"
+            }]
         }
-    );
+    });
 
-    window.liftChartInstance = new Chart(
-        document.getElementById("liftChart"),
-        {
-            type: "line",
-            data: {
-                labels: bench.map(x => x.date),
-                datasets: [{
-                    label: "Bench",
-                    data: bench.map(x => x.value),
-                    borderColor: "white"
-                }]
-            }
+    liftChartInstance = new Chart(document.getElementById("liftChart"), {
+        type: "line",
+        data: {
+            labels: bench.map(x => x.date),
+            datasets: [{
+                label: "Bench",
+                data: bench.map(x => x.value),
+                borderColor: "white"
+            }]
         }
-    );
+    });
 }
 
 /* ACHIEVEMENT */
@@ -118,7 +114,7 @@ function analysis() {
     else if (last > prev) notify("📈 Artış var");
 }
 
-/* NOTIFY (TEK) */
+/* NOTIFY */
 function notify(msg) {
     let n = document.createElement("div");
 
