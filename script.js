@@ -1,4 +1,4 @@
-console.log("SCRIPT ÇALIŞTI");
+console.log("FITNESS APP AKTİF");
 
 // ================= FIREBASE =================
 const firebaseConfig = {
@@ -14,24 +14,32 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 // ================= HELPERS =================
-function today() {
+function today(){
   return new Date().toLocaleDateString("tr-TR");
 }
 
-// ================= TEST =================
-window.testFirebase = async function () {
-  await db.collection("test").add({
-    msg: "Firebase çalışıyor",
-    time: Date.now()
+// ================= NAV =================
+window.show = function(page){
+  document.querySelectorAll(".page").forEach(p => p.classList.add("hidden"));
+  document.getElementById(page).classList.remove("hidden");
+};
+
+// ================= GOAL =================
+window.setGoal = async function(){
+  let g = document.getElementById("goalInput").value;
+
+  await db.collection("settings").doc("goal").set({
+    value: Number(g)
   });
-  console.log("FIREBASE OK");
+
+  alert("Hedef kaydedildi");
 };
 
 // ================= WEIGHT =================
-window.addWeight = async function () {
+window.addWeight = async function(){
   let w = document.getElementById("weightInput").value;
 
-  if (!w) return;
+  if(!w) return;
 
   await db.collection("weights").add({
     value: Number(w),
@@ -39,14 +47,14 @@ window.addWeight = async function () {
     time: Date.now()
   });
 
-  console.log("Weight eklendi:", w);
+  alert("Kilo eklendi");
 };
 
-// ================= LIFTS =================
-window.addLift = async function (type) {
+// ================= LIFT =================
+window.addLift = async function(type){
   let v = document.getElementById(type + "Input").value;
 
-  if (!v) return;
+  if(!v) return;
 
   await db.collection("lifts").add({
     type,
@@ -55,18 +63,18 @@ window.addLift = async function (type) {
     time: Date.now()
   });
 
-  console.log("Lift eklendi:", type, v);
+  alert("Ağırlık eklendi");
 };
 
-// ================= LOAD DATA =================
-window.loadData = async function () {
-  let wSnap = await db.collection("weights").get();
-
-  console.log("---- WEIGHTS ----");
-  wSnap.forEach(doc => {
-    console.log(doc.data());
+// ================= TEST =================
+window.testFirebase = async function(){
+  await db.collection("test").add({
+    msg:"ok",
+    time:Date.now()
   });
+
+  console.log("FIREBASE OK");
 };
 
-// ================= GLOBAL DEBUG =================
+// ================= DEBUG =================
 window.db = db;
