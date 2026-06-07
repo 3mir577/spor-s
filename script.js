@@ -1,48 +1,37 @@
-console.log("SCRIPT ÇALIŞIYOR");
+console.log("SCRIPT ÇALIŞTI");
 
-
+// ================= FIREBASE =================
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyByBoLqOnpKRos3g8v3334t54xpjKFoeGw",
+  authDomain: "fitness-app-85f16.firebaseapp.com",
+  projectId: "fitness-app-85f16",
+  storageBucket: "fitness-app-85f16.firebasestorage.app",
+  messagingSenderId: "887431608333",
+  appId: "1:887431608333:web:fef66f5189d791379c3d44"
 };
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-/* =========================
-   HELPERS
-========================= */
-
+// ================= HELPERS =================
 function today() {
   return new Date().toLocaleDateString("tr-TR");
 }
 
-/* =========================
-   TEST FUNCTION
-========================= */
+// ================= TEST =================
+window.testFirebase = async function () {
+  await db.collection("test").add({
+    msg: "Firebase çalışıyor",
+    time: Date.now()
+  });
+  console.log("FIREBASE OK");
+};
 
-async function testFirebase() {
-  try {
-    await db.collection("test").add({
-      msg: "Firebase çalışıyor",
-      time: Date.now()
-    });
-    console.log("✅ Firebase OK - veri gitti");
-  } catch (e) {
-    console.error("❌ Firebase hata:", e);
-  }
-}
-
-/* =========================
-   WEIGHT ADD
-========================= */
-
-async function addWeight() {
+// ================= WEIGHT =================
+window.addWeight = async function () {
   let w = document.getElementById("weightInput").value;
+
+  if (!w) return;
 
   await db.collection("weights").add({
     value: Number(w),
@@ -51,40 +40,33 @@ async function addWeight() {
   });
 
   console.log("Weight eklendi:", w);
-}
+};
 
-/* =========================
-   LIFT ADD
-========================= */
-
-async function addLift(type) {
+// ================= LIFTS =================
+window.addLift = async function (type) {
   let v = document.getElementById(type + "Input").value;
 
+  if (!v) return;
+
   await db.collection("lifts").add({
-    type: type,
+    type,
     value: Number(v),
     date: today(),
     time: Date.now()
   });
 
   console.log("Lift eklendi:", type, v);
-}
+};
 
-/* =========================
-   LOAD DATA (TEST)
-========================= */
-
-async function loadData() {
+// ================= LOAD DATA =================
+window.loadData = async function () {
   let wSnap = await db.collection("weights").get();
 
+  console.log("---- WEIGHTS ----");
   wSnap.forEach(doc => {
-    console.log("DB Weight:", doc.data());
+    console.log(doc.data());
   });
-}
+};
 
-/* =========================
-   DEBUG GLOBAL
-========================= */
-
+// ================= GLOBAL DEBUG =================
 window.db = db;
-window.testFirebase = testFirebase;
