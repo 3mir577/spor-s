@@ -142,7 +142,18 @@ async function loadData(){
       "chest_fly",
       "machine_shoulder_press",
       "lateral_raise",
-      "skullcrusher"
+      "skullcrusher",
+      "Lat_Pulldown",
+      "Plate_Loaded",
+      "Cable_Row",
+      "Cable_Curl",
+      "İncline_Dumbell_Curl",
+      "Leg_Press",
+      "Smith_Machine_Squat",
+      "Leg_Extansion",
+      "Seated_Leg_Curl",
+      "Cable_Crunch"
+            
     ];
 
     // ── TÜM ZAMANLAR (PR rozetleri için) ──
