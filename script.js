@@ -16,17 +16,17 @@ const db = firebase.firestore();
 // ================= HELPERS =================
 const today = () => new Date().toLocaleDateString("tr-TR");
 
-// (İSTEĞE BAĞLI: haftalık sistem için)
-function getWeekAgo(){
-  let d = new Date();
-  d.setDate(d.getDate() - 7);
-  return d.getTime();
-}
-
 // ================= NAV =================
 window.show = function(page){
   document.querySelectorAll(".page").forEach(p => p.classList.add("hidden"));
-  document.getElementById(page).classList.remove("hidden");
+  const el = document.getElementById(page);
+  el.classList.remove("hidden");
+  // Kart animasyonunu yeniden tetikle
+  el.querySelectorAll(".card").forEach(c => {
+    c.style.animation = "none";
+    c.offsetHeight;
+    c.style.animation = "";
+  });
   loadData();
 };
 
@@ -34,11 +34,7 @@ window.show = function(page){
 window.setGoal = async function(){
   let g = document.getElementById("goalInput").value;
   if(!g) return;
-
-  await db.collection("settings").doc("goal").set({
-    value: Number(g)
-  });
-
+  await db.collection("settings").doc("goal").set({ value: Number(g) });
   loadData();
 };
 
@@ -46,41 +42,66 @@ window.setGoal = async function(){
 window.addWeight = async function(){
   let w = document.getElementById("weightInput").value;
   if(!w) return;
-
   await db.collection("weights").add({
     value: Number(w),
     date: today(),
     time: Date.now()
   });
-
+  document.getElementById("weightInput").value = "";
   loadData();
 };
 
-// ================= LIFT =================
+// ================= LIFT (GELİŞTİRİLMİŞ) =================
 window.addLift = async function(type){
   let v = document.getElementById(type + "Input").value;
   if(!v) return;
+  const val = Number(v);
+
+  // Kaydetmeden önce mevcut PR'ı al
+  const prSnap = await db.collection("lifts").where("type","==",type).get();
+  let currentPR = 0;
+  prSnap.forEach(d => { if(d.data().value > currentPR) currentPR = d.data().value; });
 
   await db.collection("lifts").add({
     type,
-    value: Number(v),
+    value: val,
     date: today(),
     time: Date.now()
   });
 
+  // Toast mesajı
+  if(val > currentPR && currentPR > 0){
+    showToast("🏆 PR kırdın! +" + (val - currentPR).toFixed(1) + " kg");
+  } else if(currentPR === 0){
+    showToast("✅ Kaydedildi!");
+  } else {
+    showToast("💾 Kaydedildi — PR: " + currentPR + " kg (" + (val - currentPR).toFixed(1) + " kg fark)");
+  }
+
+  document.getElementById(type + "Input").value = "";
   loadData();
 };
 
+// ================= TOAST =================
+function showToast(msg){
+  let t = document.getElementById("toast");
+  if(!t){
+    t = document.createElement("div");
+    t.id = "toast";
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove("show"), 3000);
+}
+
 // ================= MAIN LOAD =================
 async function loadData(){
-
   try {
 
-    // ================= WEIGHTS =================
-    let wSnap = await db.collection("weights")
-      .orderBy("time")
-      .get();
-
+    // ── WEIGHTS ──
+    let wSnap = await db.collection("weights").orderBy("time").get();
     let weights = [];
     wSnap.forEach(d => weights.push(d.data()));
 
@@ -89,67 +110,155 @@ async function loadData(){
         weights[weights.length - 1].value + " kg";
     }
 
-    // ================= BENCH PR =================
-    let lSnap = await db.collection("lifts")
-      .where("type","==","smith_low_incline_press")
-      .get();
-
-    let max = 0;
-
-    lSnap.forEach(d=>{
-      let v = d.data().value;
-      if(v > max) max = v;
-    });
-
-    document.getElementById("benchMax").innerText =
-      max ? max + " kg" : "-";
-
-    // ================= GOAL FIX (TELEFON + PC SENK) =================
-    let goalSnap = await db.collection("settings")
-      .doc("goal")
-      .get();
-
+    // ── GOAL ──
+    let goalSnap = await db.collection("settings").doc("goal").get();
     if(goalSnap.exists && goalSnap.data().value !== undefined){
-      document.getElementById("goalText").innerText =
-        "Hedef: " + goalSnap.data().value + " kg";
+      const goal = goalSnap.data().value;
+      document.getElementById("goalText").innerText = "Hedef: " + goal + " kg";
+
+      // Progress bar
+      if(weights.length){
+        const current = weights[weights.length - 1].value;
+        const first = weights[0].value;
+        let pct = 0;
+        if(first !== goal){
+          pct = Math.min(100, Math.max(0, ((first - current) / (first - goal)) * 100));
+        }
+        document.getElementById("progressBar").style.width = pct + "%";
+      }
     } else {
       document.getElementById("goalText").innerText = "Hedef: -";
     }
 
-    // ================= CHART =================
-    drawWeightChart(weights);
+    // ── LIFTS ──
+    let lSnap = await db.collection("lifts").orderBy("time").get();
+    let allLifts = [];
+    lSnap.forEach(d => allLifts.push(d.data()));
 
-  } catch (err){
+    const LIFT_TYPES = [
+      "plate_incline_press",
+      "smith_low_incline_press",
+      "chest_fly",
+      "machine_shoulder_press",
+      "lateral_raise",
+      "skullcrusher"
+    ];
+
+    // Her egzersiz için PR, son değer ve önceki seans hesapla
+    LIFT_TYPES.forEach(type => {
+      const entries = allLifts.filter(l => l.type === type).sort((a,b) => a.time - b.time);
+      const pr     = entries.length ? Math.max(...entries.map(e => e.value)) : null;
+      const last   = entries.length ? entries[entries.length - 1].value : null;
+
+      // Önceki farklı günün son değeri
+      let prevSession = null;
+      if(entries.length >= 2){
+        const lastDate = entries[entries.length - 1].date;
+        for(let i = entries.length - 2; i >= 0; i--){
+          if(entries[i].date !== lastDate){ prevSession = entries[i].value; break; }
+        }
+      }
+
+      const infoEl = document.getElementById(type + "Info");
+      if(!infoEl) return;
+
+      let html = "";
+      if(pr !== null)   html += `<span class="pr-badge">PR ${pr} kg</span>`;
+      if(last !== null) html += `<span class="last-val">Son: ${last} kg</span>`;
+      if(prevSession !== null){
+        const diff = last - prevSession;
+        const sign = diff > 0 ? "+" : "";
+        const cls  = diff > 0 ? "diff-up" : diff < 0 ? "diff-down" : "diff-same";
+        html += `<span class="${cls}">${sign}${diff.toFixed(1)} kg geçen sefere göre</span>`;
+      }
+      infoEl.innerHTML = html;
+    });
+
+    // ── BENCH PR (home) ──
+    const benchEntries = allLifts.filter(l => l.type === "smith_low_incline_press");
+    const benchMax = benchEntries.length ? Math.max(...benchEntries.map(e => e.value)) : 0;
+    document.getElementById("benchMax").innerText = benchMax ? benchMax + " kg" : "-";
+
+    // ── STREAK ──
+    updateStreak(weights);
+
+    // ── CHARTS ──
+    drawWeightChart(weights);
+    drawStatsCharts(weights, allLifts);
+
+  } catch(err){
     console.error("LOAD ERROR:", err);
   }
 }
 
-// ================= CHART =================
-let weightChart;
+// ================= STREAK =================
+function updateStreak(weights){
+  if(!weights.length){ document.getElementById("streak").innerText = "0 gün 🔥"; return; }
+  const days = [...new Set(weights.map(w => w.date))];
+  let streak = 1;
+  for(let i = days.length - 1; i > 0; i--){
+    const a = new Date(days[i].split(".").reverse().join("-"));
+    const b = new Date(days[i-1].split(".").reverse().join("-"));
+    if((a - b) / (1000*60*60*24) === 1) streak++;
+    else break;
+  }
+  document.getElementById("streak").innerText = streak + " gün 🔥";
+}
+
+// ================= CHARTS =================
+let weightChart, weightChartStats, liftChart;
+
+const chartDefaults = {
+  plugins:{ legend:{display:false} },
+  scales:{
+    x:{ ticks:{color:"#555"}, grid:{color:"rgba(255,255,255,0.04)"} },
+    y:{ ticks:{color:"#555"}, grid:{color:"rgba(255,255,255,0.04)"} }
+  }
+};
 
 function drawWeightChart(weights){
-
   let ctx = document.getElementById("weightChart");
   if(!ctx) return;
-
   if(weightChart) weightChart.destroy();
-
   weightChart = new Chart(ctx, {
-    type: "line",
-    data: {
+    type:"line",
+    data:{
       labels: weights.map(w => w.date),
-      datasets: [{
-        data: weights.map(w => w.value),
-        borderColor: "white"
-      }]
-    }
+      datasets:[{ data: weights.map(w => w.value), borderColor:"white", backgroundColor:"rgba(255,255,255,0.05)", tension:0.4, pointRadius:3, pointBackgroundColor:"white" }]
+    },
+    options: chartDefaults
   });
 }
 
-// ================= INIT =================
-window.addEventListener("load", () => {
-  loadData();
-});
+function drawStatsCharts(weights, allLifts){
+  let ctx2 = document.getElementById("weightChartStats");
+  if(ctx2){
+    if(weightChartStats) weightChartStats.destroy();
+    weightChartStats = new Chart(ctx2, {
+      type:"line",
+      data:{
+        labels: weights.map(w=>w.date),
+        datasets:[{ data:weights.map(w=>w.value), borderColor:"white", backgroundColor:"rgba(255,255,255,0.05)", tension:0.4, pointRadius:3, pointBackgroundColor:"white" }]
+      },
+      options: chartDefaults
+    });
+  }
 
-// debug
+  let ctx3 = document.getElementById("liftChart");
+  if(ctx3){
+    if(liftChart) liftChart.destroy();
+    const benchData = allLifts.filter(l=>l.type==="smith_low_incline_press").sort((a,b)=>a.time-b.time);
+    liftChart = new Chart(ctx3, {
+      type:"line",
+      data:{
+        labels: benchData.map(l=>l.date),
+        datasets:[{ data:benchData.map(l=>l.value), borderColor:"white", backgroundColor:"rgba(255,255,255,0.05)", tension:0.4, pointRadius:3, pointBackgroundColor:"white" }]
+      },
+      options: chartDefaults
+    });
+  }
+}
+
+// ================= INIT =================
+window.addEventListener("load", () => { loadData(); });
 window.db = db;
