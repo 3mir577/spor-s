@@ -1,3 +1,6 @@
+console.log("SCRIPT ÇALIŞIYOR");
+
+
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
   authDomain: "YOUR_PROJECT.firebaseapp.com",
