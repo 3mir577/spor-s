@@ -1,8 +1,8 @@
-console.log("FITNESS APP AKTİF");
+console.log("PRO FITNESS APP LOADED");
 
 // ================= FIREBASE =================
 const firebaseConfig = {
-  apiKey: "AIzaSyByBoLqOnpKRos3g3...",
+  apiKey: "BURAYA_KENDİ_KEYİNİ_YAZ",
   authDomain: "fitness-app-85f16.firebaseapp.com",
   projectId: "fitness-app-85f16",
   storageBucket: "fitness-app-85f16.firebasestorage.app",
@@ -13,93 +13,141 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// ================= SAFE INIT =================
-document.addEventListener("DOMContentLoaded", () => {
-  console.log("DOM READY");
-});
-
 // ================= HELPERS =================
-function today(){
-  return new Date().toLocaleDateString("tr-TR");
-}
+const today = () => new Date().toLocaleDateString("tr-TR");
 
-// ================= SAFE NAV =================
+// ================= NAV =================
 window.show = function(page){
-  document.querySelectorAll(".page").forEach(p=>{
-    if(p) p.classList.add("hidden");
+  document.querySelectorAll(".page").forEach(p => p.classList.add("hidden"));
+  document.getElementById(page).classList.remove("hidden");
+  loadData();
+};
+
+// ================= ADD WEIGHT =================
+window.addWeight = async function(){
+  let w = document.getElementById("weightInput").value;
+  if(!w) return;
+
+  await db.collection("weights").add({
+    value: Number(w),
+    date: today(),
+    time: Date.now()
   });
 
-  const el = document.getElementById(page);
-  if(el) el.classList.remove("hidden");
+  loadData();
+};
+
+// ================= ADD LIFT =================
+window.addLift = async function(type){
+  let v = document.getElementById(type + "Input").value;
+  if(!v) return;
+
+  await db.collection("lifts").add({
+    type,
+    value: Number(v),
+    date: today(),
+    time: Date.now()
+  });
+
+  loadData();
 };
 
 // ================= GOAL =================
 window.setGoal = async function(){
-  try {
-    let g = document.getElementById("goalInput")?.value;
-    if(!g) return;
+  let g = document.getElementById("goalInput").value;
+  if(!g) return;
 
-    await db.collection("settings").doc("goal").set({
-      value: Number(g),
-      time: Date.now()
-    });
+  await db.collection("settings").doc("goal").set({
+    value: Number(g)
+  });
 
-    alert("Hedef kaydedildi");
-  } catch (e) {
-    console.log("GOAL ERROR:", e);
-  }
+  loadData();
 };
 
-// ================= WEIGHT =================
-window.addWeight = async function(){
-  try {
-    let w = document.getElementById("weightInput")?.value;
-    if(!w) return;
+// ================= MAIN LOAD =================
+async function loadData(){
 
-    await db.collection("weights").add({
-      value: Number(w),
-      date: today(),
-      time: Date.now()
-    });
+  let wSnap = await db.collection("weights").orderBy("time").get();
+  let weights = [];
 
-    alert("Kilo eklendi");
-  } catch (e) {
-    console.log("WEIGHT ERROR:", e);
+  wSnap.forEach(d => weights.push(d.data()));
+
+  if(weights.length){
+    document.getElementById("todayWeight").innerText =
+      weights[weights.length - 1].value + " kg";
   }
-};
 
-// ================= LIFT =================
-window.addLift = async function(type){
-  try {
-    let v = document.getElementById(type + "Input")?.value;
-    if(!v) return;
+  let lSnap = await db.collection("lifts")
+    .where("type","==","smith_low_incline_press")
+    .get();
 
-    await db.collection("lifts").add({
-      type,
-      value: Number(v),
-      date: today(),
-      time: Date.now()
-    });
+  let max = 0;
 
-    alert("Ağırlık eklendi");
-  } catch (e) {
-    console.log("LIFT ERROR:", e);
-  }
-};
+  lSnap.forEach(d=>{
+    if(d.data().value > max) max = d.data().value;
+  });
 
-// ================= TEST =================
-window.testFirebase = async function(){
-  try {
-    await db.collection("test").add({
-      msg:"ok",
-      time:Date.now()
-    });
+  document.getElementById("benchMax").innerText =
+    max ? max + " kg" : "-";
 
-    console.log("FIREBASE OK");
-  } catch (e) {
-    console.log("FIREBASE ERROR:", e);
-  }
-};
+  drawWeightChart(weights);
+  drawLiftChart();
+}
 
-// ================= DEBUG =================
+// ================= WEIGHT CHART =================
+let weightChart;
+
+function drawWeightChart(weights){
+
+  let ctx = document.getElementById("weightChart") 
+          || document.getElementById("weightChartStats");
+
+  if(!ctx) return;
+
+  if(weightChart) weightChart.destroy();
+
+  weightChart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: weights.map(w => w.date),
+      datasets: [{
+        data: weights.map(w => w.value),
+        borderColor: "white"
+      }]
+    }
+  });
+}
+
+// ================= LIFT CHART =================
+let liftChart;
+
+async function drawLiftChart(){
+
+  let snap = await db.collection("lifts").get();
+  let data = [];
+
+  snap.forEach(d => data.push(d.data()));
+
+  let ctx = document.getElementById("liftChart");
+  if(!ctx) return;
+
+  if(liftChart) liftChart.destroy();
+
+  liftChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: data.map(x => x.type),
+      datasets: [{
+        data: data.map(x => x.value),
+        backgroundColor: "white"
+      }]
+    }
+  });
+}
+
+// ================= INIT =================
+window.addEventListener("load", () => {
+  loadData();
+});
+
 window.db = db;
