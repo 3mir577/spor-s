@@ -23,7 +23,19 @@ window.show = function(page){
   loadData();
 };
 
-// ================= ADD WEIGHT =================
+// ================= GOAL =================
+window.setGoal = async function(){
+  let g = document.getElementById("goalInput").value;
+  if(!g) return;
+
+  await db.collection("settings").doc("goal").set({
+    value: Number(g)
+  });
+
+  loadData();
+};
+
+// ================= WEIGHT =================
 window.addWeight = async function(){
   let w = document.getElementById("weightInput").value;
   if(!w) return;
@@ -37,7 +49,7 @@ window.addWeight = async function(){
   loadData();
 };
 
-// ================= ADD LIFT =================
+// ================= LIFT =================
 window.addLift = async function(type){
   let v = document.getElementById(type + "Input").value;
   if(!v) return;
@@ -52,28 +64,6 @@ window.addLift = async function(type){
   loadData();
 };
 
-// ================= SET GOAL =================
-window.setGoal = async function(){
-  let g = document.getElementById("goalInput").value;
-  if(!g) return;
-
-  await db.collection("settings").doc("goal").set({
-    value: Number(g)
-  });
-
-  loadData();
-};
-
-// ================= LOAD GOAL (FIX) =================
-async function loadGoal(){
-  let goalSnap = await db.collection("settings").doc("goal").get();
-
-  if(goalSnap.exists){
-    let goal = goalSnap.data().value;
-    document.getElementById("goalText").innerText = "Hedef: " + goal + " kg";
-  }
-}
-
 // ================= MAIN LOAD =================
 async function loadData(){
 
@@ -85,10 +75,10 @@ async function loadData(){
 
   if(weights.length){
     document.getElementById("todayWeight").innerText =
-      weights.at(-1).value + " kg";
+      weights[weights.length - 1].value + " kg";
   }
 
-  // BENCH PR
+  // LIFTS (BENCH PR)
   let lSnap = await db.collection("lifts")
     .where("type","==","smith_low_incline_press")
     .get();
@@ -103,19 +93,23 @@ async function loadData(){
   document.getElementById("benchMax").innerText =
     max ? max + " kg" : "-";
 
+  // GOAL 🔥 (SENDE EKSİK OLAN BUYDU)
+  let goalSnap = await db.collection("settings").doc("goal").get();
+
+  if(goalSnap.exists){
+    let goal = goalSnap.data().value;
+    document.getElementById("goalText").innerText = "Hedef: " + goal + " kg";
+  }
+
   drawWeightChart(weights);
-  drawLiftChart();
-  loadGoal(); // ⭐ FIX EKLENDİ
 }
 
-// ================= WEIGHT CHART =================
+// ================= CHART =================
 let weightChart;
 
 function drawWeightChart(weights){
 
-  let ctx = document.getElementById("weightChart") 
-          || document.getElementById("weightChartStats");
-
+  let ctx = document.getElementById("weightChart");
   if(!ctx) return;
 
   if(weightChart) weightChart.destroy();
@@ -127,33 +121,6 @@ function drawWeightChart(weights){
       datasets: [{
         data: weights.map(w => w.value),
         borderColor: "white"
-      }]
-    }
-  });
-}
-
-// ================= LIFT CHART =================
-let liftChart;
-
-async function drawLiftChart(){
-
-  let snap = await db.collection("lifts").get();
-  let data = [];
-
-  snap.forEach(d => data.push(d.data()));
-
-  let ctx = document.getElementById("liftChart");
-  if(!ctx) return;
-
-  if(liftChart) liftChart.destroy();
-
-  liftChart = new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels: data.map(x => x.type),
-      datasets: [{
-        data: data.map(x => x.value),
-        backgroundColor: "white"
       }]
     }
   });
