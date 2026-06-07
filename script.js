@@ -152,7 +152,9 @@ async function loadData(){
       "Smith_Machine_Squat",
       "Leg_Extansion",
       "Seated_Leg_Curl",
-      "Cable_Crunch"
+      "Cable_Crunch",
+      "Triceps_Pushdown",
+      "Overhead_Rope_Extension"
             
     ];
 
