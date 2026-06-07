@@ -3,7 +3,8 @@
    Aesthetic: Pure black & white, editorial
    ============================================= */
 
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap');
+/* Google Fonts — internete bağlıysa yüklenir, bağlı değilse system font devreye girer */
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap');
 
 :root {
   --bg: #080808;
@@ -16,8 +17,10 @@
   --text: #f2f2f2;
   --text-muted: #3a3a3a;
   --text-sub: #666;
-  --font-display: 'Bebas Neue', sans-serif;
-  --font-body: 'DM Sans', sans-serif;
+  /* Bebas Neue yoksa impact/condensed fallback */
+  --font-display: 'Bebas Neue', Impact, 'Arial Narrow', sans-serif;
+  /* DM Sans yoksa system-ui fallback */
+  --font-body: 'DM Sans', system-ui, -apple-system, sans-serif;
   --radius: 16px;
   --radius-sm: 10px;
 }
