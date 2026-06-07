@@ -130,8 +130,9 @@ async function loadData(){
       document.getElementById("goalText").innerText = "Hedef: -";
     }
 
-    // ── LIFTS ──
-    let lSnap = await db.collection("lifts").orderBy("time").get();
+    // ── LIFTS (son 14 gün) ──
+    const fourteenDaysAgo = Date.now() - (14 * 24 * 60 * 60 * 1000);
+    let lSnap = await db.collection("lifts").orderBy("time").where("time",">=",fourteenDaysAgo).get();
     let allLifts = [];
     lSnap.forEach(d => allLifts.push(d.data()));
 
@@ -144,10 +145,19 @@ async function loadData(){
       "skullcrusher"
     ];
 
+    // ── TÜM ZAMANLAR (PR rozetleri için) ──
+    const allTimeSnap = await db.collection("lifts").orderBy("time").get();
+    let allTimeLifts = [];
+    allTimeSnap.forEach(d => allTimeLifts.push(d.data()));
+
     // Her egzersiz için PR, son değer ve önceki seans hesapla
     LIFT_TYPES.forEach(type => {
+      // PR → tüm zamanlar
+      const allEntries = allTimeLifts.filter(l => l.type === type);
+      const pr = allEntries.length ? Math.max(...allEntries.map(e => e.value)) : null;
+
+      // Son değer ve önceki seans → son 14 gün
       const entries = allLifts.filter(l => l.type === type).sort((a,b) => a.time - b.time);
-      const pr     = entries.length ? Math.max(...entries.map(e => e.value)) : null;
       const last   = entries.length ? entries[entries.length - 1].value : null;
 
       // Önceki farklı günün son değeri
@@ -174,9 +184,11 @@ async function loadData(){
       infoEl.innerHTML = html;
     });
 
-    // ── BENCH PR (home) ──
-    const benchEntries = allLifts.filter(l => l.type === "smith_low_incline_press");
-    const benchMax = benchEntries.length ? Math.max(...benchEntries.map(e => e.value)) : 0;
+    // ── BENCH PR (tüm zamanlar) ──
+    const allBenchSnap = await db.collection("lifts").where("type","==","smith_low_incline_press").get();
+    let allBenchVals = [];
+    allBenchSnap.forEach(d => allBenchVals.push(d.data().value));
+    const benchMax = allBenchVals.length ? Math.max(...allBenchVals) : 0;
     document.getElementById("benchMax").innerText = benchMax ? benchMax + " kg" : "-";
 
     // ── STREAK ──
