@@ -16,6 +16,13 @@ const db = firebase.firestore();
 // ================= HELPERS =================
 const today = () => new Date().toLocaleDateString("tr-TR");
 
+// (İSTEĞE BAĞLI: haftalık sistem için)
+function getWeekAgo(){
+  let d = new Date();
+  d.setDate(d.getDate() - 7);
+  return d.getTime();
+}
+
 // ================= NAV =================
 window.show = function(page){
   document.querySelectorAll(".page").forEach(p => p.classList.add("hidden"));
@@ -67,41 +74,54 @@ window.addLift = async function(type){
 // ================= MAIN LOAD =================
 async function loadData(){
 
-  // WEIGHTS
-  let wSnap = await db.collection("weights").orderBy("time").get();
-  let weights = [];
+  try {
 
-  wSnap.forEach(d => weights.push(d.data()));
+    // ================= WEIGHTS =================
+    let wSnap = await db.collection("weights")
+      .orderBy("time")
+      .get();
 
-  if(weights.length){
-    document.getElementById("todayWeight").innerText =
-      weights[weights.length - 1].value + " kg";
+    let weights = [];
+    wSnap.forEach(d => weights.push(d.data()));
+
+    if(weights.length){
+      document.getElementById("todayWeight").innerText =
+        weights[weights.length - 1].value + " kg";
+    }
+
+    // ================= BENCH PR =================
+    let lSnap = await db.collection("lifts")
+      .where("type","==","smith_low_incline_press")
+      .get();
+
+    let max = 0;
+
+    lSnap.forEach(d=>{
+      let v = d.data().value;
+      if(v > max) max = v;
+    });
+
+    document.getElementById("benchMax").innerText =
+      max ? max + " kg" : "-";
+
+    // ================= GOAL FIX (TELEFON + PC SENK) =================
+    let goalSnap = await db.collection("settings")
+      .doc("goal")
+      .get();
+
+    if(goalSnap.exists && goalSnap.data().value !== undefined){
+      document.getElementById("goalText").innerText =
+        "Hedef: " + goalSnap.data().value + " kg";
+    } else {
+      document.getElementById("goalText").innerText = "Hedef: -";
+    }
+
+    // ================= CHART =================
+    drawWeightChart(weights);
+
+  } catch (err){
+    console.error("LOAD ERROR:", err);
   }
-
-  // LIFTS (BENCH PR)
-  let lSnap = await db.collection("lifts")
-    .where("type","==","smith_low_incline_press")
-    .get();
-
-  let max = 0;
-
-  lSnap.forEach(d=>{
-    let v = d.data().value;
-    if(v > max) max = v;
-  });
-
-  document.getElementById("benchMax").innerText =
-    max ? max + " kg" : "-";
-
-  // GOAL 🔥 (SENDE EKSİK OLAN BUYDU)
-  let goalSnap = await db.collection("settings").doc("goal").get();
-
-  if(goalSnap.exists){
-    let goal = goalSnap.data().value;
-    document.getElementById("goalText").innerText = "Hedef: " + goal + " kg";
-  }
-
-  drawWeightChart(weights);
 }
 
 // ================= CHART =================
@@ -131,4 +151,5 @@ window.addEventListener("load", () => {
   loadData();
 });
 
+// debug
 window.db = db;
