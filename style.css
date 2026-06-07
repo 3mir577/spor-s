@@ -289,9 +289,9 @@ canvas { border-radius: var(--radius-sm); margin-top: 4px; }
   position: fixed;
   bottom: 72px; left: 16px;
   font-family: var(--font-display);
-  font-size: 0.75rem;
+  font-size: 1.15rem;
   letter-spacing: 0.14em; text-transform: uppercase;
-  color: var(--text-muted);
+  color: #555;
   pointer-events: none;
   z-index: 150;
   animation: sigIn 1s ease 2.5s both;
