@@ -52,7 +52,7 @@ window.addLift = async function(type){
   loadData();
 };
 
-// ================= GOAL =================
+// ================= SET GOAL =================
 window.setGoal = async function(){
   let g = document.getElementById("goalInput").value;
   if(!g) return;
@@ -64,9 +64,20 @@ window.setGoal = async function(){
   loadData();
 };
 
+// ================= LOAD GOAL (FIX) =================
+async function loadGoal(){
+  let goalSnap = await db.collection("settings").doc("goal").get();
+
+  if(goalSnap.exists){
+    let goal = goalSnap.data().value;
+    document.getElementById("goalText").innerText = "Hedef: " + goal + " kg";
+  }
+}
+
 // ================= MAIN LOAD =================
 async function loadData(){
 
+  // WEIGHTS
   let wSnap = await db.collection("weights").orderBy("time").get();
   let weights = [];
 
@@ -74,9 +85,10 @@ async function loadData(){
 
   if(weights.length){
     document.getElementById("todayWeight").innerText =
-      weights[weights.length - 1].value + " kg";
+      weights.at(-1).value + " kg";
   }
 
+  // BENCH PR
   let lSnap = await db.collection("lifts")
     .where("type","==","smith_low_incline_press")
     .get();
@@ -84,7 +96,8 @@ async function loadData(){
   let max = 0;
 
   lSnap.forEach(d=>{
-    if(d.data().value > max) max = d.data().value;
+    let v = d.data().value;
+    if(v > max) max = v;
   });
 
   document.getElementById("benchMax").innerText =
@@ -92,6 +105,7 @@ async function loadData(){
 
   drawWeightChart(weights);
   drawLiftChart();
+  loadGoal(); // ⭐ FIX EKLENDİ
 }
 
 // ================= WEIGHT CHART =================
