@@ -356,5 +356,27 @@ function drawStatsCharts(weights, lifts){
   }
 }
 
+function createStars() {
+  const container = document.querySelector(".stars");
+  if (!container) return;
+
+  const count = 120; // yıldız sayısı
+
+  for (let i = 0; i < count; i++) {
+    const star = document.createElement("div");
+    star.className = "star";
+
+    star.style.top = Math.random() * 100 + "%";
+    star.style.left = Math.random() * 100 + "%";
+
+    star.style.animationDuration = (1 + Math.random() * 3) + "s";
+    star.style.opacity = Math.random();
+
+    container.appendChild(star);
+  }
+}
+
+createStars();
+
 window.db = db;
 JSEOF
