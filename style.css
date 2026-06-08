@@ -368,3 +368,75 @@ canvas { border-radius: var(--radius-sm); margin-top: 4px; }
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
+
+
+/* =========================
+   LOGIN UI FIX (SAFE PATCH)
+   ========================= */
+
+/* login ekranı tam siyah + tam kaplama */
+#loginScreen{
+  position: fixed;
+  inset: 0;
+  background: #000; /* şeffaf yok */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  padding: 20px;
+}
+
+/* login kartını ortala ve dikdörtgen yap */
+.login-wrap{
+  width: 100%;
+  max-width: 420px;
+}
+
+/* asıl kutu */
+.login-box{
+  background: #111;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 22px;
+  padding: 34px;
+  box-shadow: 0 25px 80px rgba(0,0,0,0.85);
+}
+
+/* logo düzelt */
+.login-logo{
+  font-family: var(--font-display);
+  font-size: 56px;
+  text-align: center;
+  letter-spacing: 6px;
+}
+
+/* alt başlık */
+.login-title{
+  text-align: center;
+  margin-top: 6px;
+  font-size: 13px;
+  letter-spacing: 2px;
+  color: #777;
+}
+
+/* inputları biraz büyüt */
+.login-box input{
+  background: #181818;
+  border-radius: 12px;
+  margin-top: 12px;
+}
+
+/* buton spacing */
+.login-box button{
+  margin-top: 14px;
+}
+
+/* APP ARKADA KALSIN */
+#app{
+  position: relative;
+  z-index: 1;
+}
+
+/* splash her şeyin üstünde */
+#splash{
+  z-index: 100000;
+}
