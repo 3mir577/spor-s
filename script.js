@@ -1,9 +1,9 @@
-cat > /mnt/user-data/outputs/script.js << 'JSEOF'
+
 console.log("FITNESS PRO MAX LOADED");
 
 // ================= FIREBASE =================
 const firebaseConfig = {
-  apiKey: "BURAYA_KENDİ_KEYİNİ_YAZ",
+  apiKey: "AIzaSyByBoLqOnpKRos3g8v3334t54xpjKFoeGw",
   authDomain: "fitness-app-85f16.firebaseapp.com",
   projectId: "fitness-app-85f16",
   storageBucket: "fitness-app-85f16.firebasestorage.app",
