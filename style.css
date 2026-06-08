@@ -2,7 +2,7 @@
    FITNESS PRO MAX — MONOCHROME EDITION
    ============================================= */
 
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Montserrat:wght@400;600;800&display=swap');
 :root {
   --bg: #080808;
   --surface: #101010;
@@ -12,8 +12,8 @@
   --text: #f2f2f2;
   --text-muted: #3a3a3a;
   --text-sub: #666;
-  --font-display: 'Bebas Neue', Impact, 'Arial Narrow', sans-serif;
-  --font-body: 'Inter', system-ui, sans-serif;
+  --font-display: 'Montserrat', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
   --radius: 16px;
   --radius-sm: 10px;
 }
@@ -374,21 +374,25 @@ canvas { border-radius: var(--radius-sm); margin-top: 4px; }
    ========================= */
 
 /* login ekranı tam siyah + tam kaplama */
-#loginScreen{
+#loginScreen {
   position: fixed;
   inset: 0;
-  background: #000; /* şeffaf yok */
+  background: rgba(0,0,0,0.95);
+  z-index: 9999;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 99999;
-  padding: 20px;
 }
 
 /* login kartını ortala ve dikdörtgen yap */
-.login-wrap{
-  width: 100%;
-  max-width: 420px;
+.login-wrap {
+  width: 360px;
+  padding: 24px;
+  background: #101010;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 18px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.7);
 }
 
 /* asıl kutu */
@@ -481,6 +485,7 @@ body::before{
 #app, #loginScreen, #splash{
   position:relative;
   z-index:2;
+  transition: opacity 0.4s ease;
 }
 
 
@@ -544,18 +549,17 @@ body::after{
 
 
 .logout-big,
-.logout-btn{
+.logout-btn {
   position: fixed;
-  left: 16px;
   bottom: 80px;
+  left: 16px;
   width: auto;
-  padding: 10px 16px;
-  border-radius: 12px;
-  background: #111;
-  color: #fff;
-  border: 1px solid rgba(255,255,255,0.1);
+  padding: 8px 14px;
   font-size: 12px;
-  z-index: 9999;
+  background: #fff;
+  color: #000;
+  border-radius: 999px;
+  z-index: 300;
 }
 
 .card{
@@ -564,4 +568,25 @@ body::after{
 
 .nav-btn.active{
   color:#fff;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: transparent;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(white 1px, transparent 1px),
+    radial-gradient(white 1px, transparent 1px);
+  background-size: 3px 3px, 5px 5px;
+  background-position: 0 0, 50px 50px;
+  opacity: 0.5;
+  animation: starsMove 60s linear infinite;
+}
+
+@keyframes starsMove {
+  from { transform: translateY(0); }
+  to { transform: translateY(-200px); }
 }
