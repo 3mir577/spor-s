@@ -2,8 +2,7 @@
    FITNESS PRO MAX — MONOCHROME EDITION
    ============================================= */
 
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap');
-
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap');
 :root {
   --bg: #080808;
   --surface: #101010;
@@ -14,7 +13,7 @@
   --text-muted: #3a3a3a;
   --text-sub: #666;
   --font-display: 'Bebas Neue', Impact, 'Arial Narrow', sans-serif;
-  --font-body: 'DM Sans', system-ui, -apple-system, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
   --radius: 16px;
   --radius-sm: 10px;
 }
@@ -220,7 +219,7 @@ button::after {
   opacity: 0;
   transition: opacity 0.3s;
 }
-button:hover { background: #f0f0f0; transform: translateY(-2px); box-shadow: 0 6px 24px rgba(255,255,255,0.12); }
+button:hover { background: #f0f0f0; transform: translateY(-2px); box-shadow: 0 6px 24px rgba(255,255,255,0.12);transform: translateY(-2px) scale(1.01); }
 button:active { transform: translateY(0); box-shadow: none; }
 button:active::after { opacity: 1; }
 
@@ -439,4 +438,130 @@ canvas { border-radius: var(--radius-sm); margin-top: 4px; }
 /* splash her şeyin üstünde */
 #splash{
   z-index: 100000;
+}
+
+
+/* =========================
+   STAR BACKGROUND EFFECT
+   ========================= */
+
+body{
+  background:#000;
+  overflow-x:hidden;
+}
+
+/* yıldız katmanı */
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  background:
+    radial-gradient(white 1px, transparent 1px),
+    radial-gradient(white 1px, transparent 1px);
+
+  background-size: 120px 120px, 200px 200px;
+  background-position: 0 0, 60px 80px;
+
+  opacity:0.15;
+  z-index:0;
+  animation: starMove 120s linear infinite;
+}
+
+/* hafif hareket */
+@keyframes starMove{
+  from{
+    transform:translateY(0);
+  }
+  to{
+    transform:translateY(1000px);
+  }
+}
+
+/* içerik üstte kalsın */
+#app, #loginScreen, #splash{
+  position:relative;
+  z-index:2;
+}
+
+
+/* =========================
+   PREMIUM STAR BACKGROUND
+   ========================= */
+
+body{
+  background:#000;
+}
+
+/* ana yıldız katmanı */
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  background:
+    radial-gradient(white 1px, transparent 1px),
+    radial-gradient(white 1px, transparent 1px),
+    radial-gradient(white 1px, transparent 1px);
+
+  background-size: 120px 120px, 180px 180px, 260px 260px;
+  background-position: 0 0, 40px 60px, 100px 120px;
+
+  opacity:0.12;
+  animation: starMove 120s linear infinite;
+  z-index:0;
+}
+
+/* hafif parlayan küçük yıldızlar */
+body::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  background:
+    radial-gradient(white 1px, transparent 1px);
+
+  background-size: 80px 80px;
+  opacity:0.08;
+  animation: twinkle 6s ease-in-out infinite alternate;
+  z-index:0;
+}
+
+/* hareket */
+@keyframes starMove{
+  from{ transform:translateY(0); }
+  to{ transform:translateY(1000px); }
+}
+
+/* parıldama */
+@keyframes twinkle{
+  from{ opacity:0.05; }
+  to{ opacity:0.15; }
+}
+
+/* içerik üstte kalsın */
+#app, #loginScreen, #splash{
+  position:relative;
+  z-index:2;
+}
+
+
+.logout-big,
+.logout-btn{
+  position: fixed;
+  left: 16px;
+  bottom: 80px;
+  width: auto;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: #111;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.1);
+  font-size: 12px;
+  z-index: 9999;
+}
+
+.card{
+  backdrop-filter: blur(8px);
+}
+
+.nav-btn.active{
+  color:#fff;
 }
