@@ -2,7 +2,7 @@
    FITNESS PRO MAX — MONOCHROME EDITION
    ============================================= */
 
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap');
 :root {
   --bg: #080808;
   --surface: #101010;
@@ -12,8 +12,8 @@
   --text: #f2f2f2;
   --text-muted: #3a3a3a;
   --text-sub: #666;
-  --font-display: 'Montserrat', system-ui, sans-serif;
-  --font-body: 'Inter', system-ui, sans-serif;
+  --font-display: 'Bebas Neue', Impact, 'Arial Narrow', sans-serif;
+  --font-body: 'DM Sans', system-ui, -apple-system, sans-serif;
   --radius: 16px;
   --radius-sm: 10px;
 }
