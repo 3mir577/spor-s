@@ -491,3 +491,10 @@ body::before {
 
   cursor: pointer;
 }
+
+.logout-nav {
+  color: #ff4d4d !important;
+}
+.logout-nav:hover {
+  background: rgba(255, 77, 77, 0.1) !important;
+}
