@@ -118,10 +118,9 @@ window.hideMuscle = function(){
   document.getElementById("muscleLegs").classList.add("hidden");
 };
 
-// ================= CUSTOM EXERCISES =================
+// ================= EXERCISES =================
 let currentMuscleGroup = null;
 
-// Default exercises per group
 const DEFAULT_EXERCISES = {
   chest: [
     { id:"plate_incline_press",     name:"Plate Incline Press",        section:"Chest" },
@@ -150,9 +149,21 @@ const DEFAULT_EXERCISES = {
   ]
 };
 
-// Get exercises for a group (default + user-added)
+// Fetch hidden default exercise IDs for this user
+async function getHiddenDefaults() {
+  if (!uid()) return [];
+  try {
+    const snap = await db.collection("users").doc(uid()).collection("hiddenDefaults").get();
+    const ids = [];
+    snap.forEach(d => ids.push(d.id));
+    return ids;
+  } catch(e) { return []; }
+}
+
+// Get visible exercises for a group (filtered defaults + user-added custom)
 async function getExercises(group) {
-  const defaults = DEFAULT_EXERCISES[group] || [];
+  const hidden  = await getHiddenDefaults();
+  const defaults = (DEFAULT_EXERCISES[group] || []).filter(ex => !hidden.includes(ex.id));
   if (!uid()) return defaults;
   try {
     const snap = await db.collection("users").doc(uid())
@@ -160,25 +171,27 @@ async function getExercises(group) {
     const custom = [];
     snap.forEach(d => custom.push(d.data()));
     return [...defaults, ...custom];
-  } catch(e) {
-    return defaults;
-  }
+  } catch(e) { return defaults; }
 }
 
-// Render exercise cards for a muscle group
+// Render exercise cards
 async function renderExercises(group) {
   const container = document.getElementById("exerciseList-" + group);
   if (!container) return;
   container.innerHTML = '<div style="color:#333;font-size:12px;text-align:center;padding:20px">Yükleniyor...</div>';
 
   const exercises = await getExercises(group);
-  const allTimeSnap = uid() ? await db.collection("users").doc(uid()).collection("lifts").orderBy("time").get() : null;
+
+  const allTimeSnap = uid()
+    ? await db.collection("users").doc(uid()).collection("lifts").orderBy("time").get()
+    : null;
   const allTimeLifts = [];
   if (allTimeSnap) allTimeSnap.forEach(d => allTimeLifts.push(d.data()));
 
   const ago14 = Date.now() - 14*24*60*60*1000;
-  const recentSnap = uid() ? await db.collection("users").doc(uid()).collection("lifts")
-    .orderBy("time").where("time",">=",ago14).get() : null;
+  const recentSnap = uid()
+    ? await db.collection("users").doc(uid()).collection("lifts").orderBy("time").where("time",">=",ago14).get()
+    : null;
   const recentLifts = [];
   if (recentSnap) recentSnap.forEach(d => recentLifts.push(d.data()));
 
@@ -193,11 +206,11 @@ async function renderExercises(group) {
   for (const [sectionName, exList] of Object.entries(sections)) {
     html += `<div class="exercise-section-label">${sectionName}</div>`;
     exList.forEach(ex => {
-      const allE  = allTimeLifts.filter(l => l.type === ex.id);
-      const pr    = allE.length ? Math.max(...allE.map(e => e.value)) : null;
-      const recE  = recentLifts.filter(l => l.type === ex.id).sort((a,b) => a.time-b.time);
-      const last  = recE.length ? recE[recE.length-1].value : null;
-      let prev    = null;
+      const allE = allTimeLifts.filter(l => l.type === ex.id);
+      const pr   = allE.length ? Math.max(...allE.map(e => e.value)) : null;
+      const recE = recentLifts.filter(l => l.type === ex.id).sort((a,b) => a.time-b.time);
+      const last = recE.length ? recE[recE.length-1].value : null;
+      let prev   = null;
       if(recE.length >= 2){
         const lastDate = recE[recE.length-1].date;
         for(let i = recE.length-2; i >= 0; i--){
@@ -212,13 +225,17 @@ async function renderExercises(group) {
         const cls  = diff > 0 ? "diff-up" : diff < 0 ? "diff-down" : "diff-same";
         badges += `<span class="${cls}">${diff > 0 ? "+" : ""}${diff.toFixed(1)} kg</span>`;
       }
+
       const inputId  = "liftInput_" + ex.id;
       const isCustom = !DEFAULT_EXERCISES[group]?.find(d => d.id === ex.id);
+      // Her hareketin silinebilir olması için — default'lar "gizlenir", custom'lar silinir
+      const deleteBtn = `<button class="delete-ex-btn" onclick="deleteExercise('${ex.id}','${group}',${isCustom})" title="Kaldır">✕</button>`;
+
       html += `
         <div class="card">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
             <div class="card-label">${ex.name}</div>
-            ${isCustom ? `<button onclick="deleteExercise('${ex.id}','${group}')" style="width:auto;padding:4px 10px;margin:0;font-size:10px;background:transparent;color:#444;border:1px solid #222;border-radius:99px;box-shadow:none;letter-spacing:0" title="Sil">✕</button>` : ''}
+            ${deleteBtn}
           </div>
           <div class="lift-info">${badges}</div>
           <div class="input-row">
@@ -229,10 +246,32 @@ async function renderExercises(group) {
     });
   }
 
+  if (exercises.length === 0) {
+    html = `<div style="color:#333;font-size:13px;text-align:center;padding:30px 0">Henüz hareket yok.<br>Aşağıdan ekle.</div>`;
+  }
+
   container.innerHTML = html;
 }
 
-// Add lift from dynamic card
+// Delete or hide exercise
+window.deleteExercise = async function(exerciseId, group, isCustom) {
+  if (!uid()) return;
+  if (isCustom) {
+    // Custom: gerçekten sil
+    const snap = await db.collection("users").doc(uid()).collection("customExercises")
+      .where("id","==",exerciseId).get();
+    const batch = db.batch();
+    snap.forEach(d => batch.delete(d.ref));
+    await batch.commit();
+  } else {
+    // Default: bu kullanıcı için gizle
+    await db.collection("users").doc(uid()).collection("hiddenDefaults").doc(exerciseId).set({ hidden: true });
+  }
+  showToast("🗑️ Hareket kaldırıldı");
+  renderExercises(group);
+};
+
+// Add lift
 window.addLiftDynamic = async function(exerciseId, group) {
   const inputEl = document.getElementById("liftInput_" + exerciseId);
   if (!inputEl || !inputEl.value || !uid()) return;
@@ -279,7 +318,6 @@ window.confirmAddExercise = async function() {
     showToast("⚠️ İsim ve grup gir");
     return;
   }
-  // Create a safe id from name
   const id = "custom_" + name.toLowerCase().replace(/[^a-z0-9]/g, "_") + "_" + Date.now();
   await db.collection("users").doc(uid()).collection("customExercises").add({
     id, name, section, group: currentMuscleGroup, createdAt: Date.now()
@@ -287,17 +325,6 @@ window.confirmAddExercise = async function() {
   closeAddExercise();
   showToast("✅ Hareket eklendi!");
   renderExercises(currentMuscleGroup);
-};
-
-window.deleteExercise = async function(exerciseId, group) {
-  if (!uid()) return;
-  const snap = await db.collection("users").doc(uid()).collection("customExercises")
-    .where("id","==",exerciseId).get();
-  const batch = db.batch();
-  snap.forEach(d => batch.delete(d.ref));
-  await batch.commit();
-  showToast("🗑️ Hareket silindi");
-  renderExercises(group);
 };
 
 // ================= QUOTES =================
@@ -326,7 +353,6 @@ window.newQuote = function(){
 window.setGoal = async function(){
   const g = document.getElementById("goalInput").value;
   if(!g || !uid()) return;
-  // Sadece bu kullanıcının settings koleksiyonuna yaz
   await db.collection("users").doc(uid()).collection("settings").doc("goal").set({ value: Number(g) });
   showToast("🎯 Hedef kaydedildi!");
   loadData();
@@ -336,7 +362,6 @@ window.setGoal = async function(){
 window.addWeight = async function(){
   const w = document.getElementById("weightInput").value;
   if(!w || !uid()) return;
-  // Kullanıcıya özel koleksiyon (uid() ile)
   await db.collection("users").doc(uid()).collection("weights").add({
     value: Number(w), date: today(), time: Date.now()
   });
@@ -358,19 +383,15 @@ function showToast(msg){
 async function loadData(){
   if(!uid()) return;
   try {
-    // Her kullanıcı kendi uid() yolu altındaki verileri görür
     const userRef = db.collection("users").doc(uid());
 
-    // WEIGHTS — sadece bu kullanıcının verileri
+    // WEIGHTS — sadece bu kullanıcının
     const wSnap = await userRef.collection("weights").orderBy("time").get();
     const weights = [];
     wSnap.forEach(d => weights.push(d.data()));
 
-    if(weights.length){
-      document.getElementById("todayWeight").textContent = weights[weights.length-1].value;
-    } else {
-      document.getElementById("todayWeight").textContent = "—";
-    }
+    document.getElementById("todayWeight").textContent =
+      weights.length ? weights[weights.length-1].value : "—";
 
     // GOAL
     const goalSnap = await userRef.collection("settings").doc("goal").get();
@@ -400,7 +421,7 @@ async function loadData(){
     const recentLifts = [];
     lSnap.forEach(d => recentLifts.push(d.data()));
 
-    // BENCH PR (smith_low_incline_press)
+    // BENCH PR
     const benchAll = allTimeLifts.filter(l => l.type === "smith_low_incline_press");
     const benchMax = benchAll.length ? Math.max(...benchAll.map(e => e.value)) : 0;
     document.getElementById("benchMax").textContent = benchMax ? benchMax + " kg" : "—";
