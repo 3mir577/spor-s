@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -8,6 +7,8 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
 <link rel="stylesheet" href="style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
@@ -21,16 +22,14 @@
 <div id="splash">
   <div class="splash-logo">FITNESS<br>PRO MAX</div>
   <div class="splash-ring"></div>
-  <div class="splash-ring r2"></div>
 </div>
 
-<!-- LOGIN EKRANI -->
+<!-- LOGIN -->
 <div id="loginScreen" class="hidden">
   <div class="login-wrap">
     <div class="login-logo">FPM</div>
     <div class="login-title">FITNESS PRO MAX</div>
     <div class="login-sub">Hesabına giriş yap</div>
-
     <div class="login-box">
       <div class="form-group">
         <label>E-posta</label>
@@ -45,7 +44,6 @@
       <button class="btn-outline" onclick="registerUser()" id="registerBtn">Hesap Oluştur</button>
       <div id="loginError" class="login-error"></div>
     </div>
-
     <div class="login-footer">Fitness Pro Max © 2025 Emir Ünlütürk</div>
   </div>
 </div>
@@ -53,45 +51,46 @@
 <!-- ANA UYGULAMA -->
 <div id="app" class="hidden">
 
-  <!-- TOP BAR -->
   <div class="top">
     <span id="topGreeting">Hoş geldin</span>
-    
-</div>
+  </div>
 
   <!-- HOME -->
   <div id="home" class="page">
-    <div class="card hero">
-      <div class="hero-eyebrow">Hedef Kilo</div>
-      <div class="hero-input-row">
-        <input id="goalInput" placeholder="örn: 75" type="number">
-        <button class="btn-sm" onclick="setGoal()">Kaydet</button>
-      </div>
-      <div class="progress-wrap">
-        <div class="progress"><div id="progressBar"></div></div>
-      </div>
-      <p id="goalText" class="goal-text">Hedef: —</p>
-    </div>
 
-    <div class="home-grid">
-      <div class="card stat-card">
-        <div class="stat-label">Bugünkü Kilo</div>
-        <div class="stat-val" id="todayWeight">—</div>
-        <div class="stat-unit">kg</div>
+    <!-- Üst stats grid: Kilo / Hedef / Streak yan yana -->
+    <div class="home-stats-row">
+      <div class="card stat-box">
+        <div class="stat-box-label">Bugünkü Kilo</div>
+        <div class="stat-box-val" id="todayWeight">—</div>
+        <div class="stat-box-unit">kg</div>
       </div>
-      <div class="card stat-card">
-        <div class="stat-label">Streak</div>
-        <div class="stat-val" id="streak">0</div>
-        <div class="stat-unit">gün 🔥</div>
+      <div class="card stat-box">
+        <div class="stat-box-label">Hedef</div>
+        <div class="stat-box-val" id="goalDisplay">—</div>
+        <div class="stat-box-unit">kg</div>
+      </div>
+      <div class="card stat-box">
+        <div class="stat-box-label">Streak</div>
+        <div class="stat-box-val" id="streak">0</div>
+        <div class="stat-box-unit">gün 🔥</div>
       </div>
     </div>
 
-    <div class="card stat-card wide">
-      <div class="stat-label">Bench PR</div>
-      <div class="stat-val xl" id="benchMax">—</div>
-      <div class="stat-unit">kg</div>
+    <!-- Progress Bar (hedef kilo ilerlemesi) -->
+    <div class="card progress-card">
+      <div class="progress-card-label">Hedefe İlerleme</div>
+      <div class="progress"><div id="progressBar"></div></div>
+      <p id="goalText" class="goal-text">Hedef belirlenmedi</p>
     </div>
 
+    <!-- Bench PR -->
+    <div class="card bench-card">
+      <div class="bench-label">Bench PR</div>
+      <div class="bench-val" id="benchMax">—</div>
+    </div>
+
+    <!-- Quote -->
     <div class="card quote-card">
       <div class="quote-mark">"</div>
       <div id="quoteText" class="quote-text">Yükleniyor...</div>
@@ -102,6 +101,17 @@
   <!-- KILO -->
   <div id="kilo" class="page hidden">
     <div class="page-header">Kilo Takibi</div>
+
+    <!-- Hedef Kilo -->
+    <div class="card">
+      <div class="card-label">Hedef Kilo</div>
+      <div class="input-row">
+        <input id="goalInput" placeholder="kg" type="number">
+        <button class="btn-sm" onclick="setGoal()">Kaydet</button>
+      </div>
+    </div>
+
+    <!-- Bugünkü kilo -->
     <div class="card">
       <div class="card-label">Bugünkü Kilonu Gir</div>
       <div class="input-row">
@@ -109,13 +119,14 @@
         <button class="btn-sm" onclick="addWeight()">Kaydet</button>
       </div>
     </div>
+
     <div class="card">
       <div class="card-label">Son 30 Gün</div>
       <canvas id="weightChart"></canvas>
     </div>
   </div>
 
-  <!-- AGIRLIK — seçim ekranı -->
+  <!-- AGIRLIK -->
   <div id="agirlik" class="page hidden">
     <div class="page-header">Ağırlık Takibi</div>
 
@@ -123,17 +134,17 @@
       <button class="muscle-btn" onclick="showMuscle('chest')">
         <span class="muscle-icon">◈</span>
         <span class="muscle-name">CHEST</span>
-        <span class="muscle-sub">Göğüs</span>
+        <span class="muscle-sub">Göğüs · Omuz · Triceps</span>
       </button>
       <button class="muscle-btn" onclick="showMuscle('back')">
         <span class="muscle-icon">◈</span>
         <span class="muscle-name">BACK</span>
-        <span class="muscle-sub">Sırt & Biceps</span>
+        <span class="muscle-sub">Sırt · Biceps</span>
       </button>
       <button class="muscle-btn" onclick="showMuscle('legs')">
         <span class="muscle-icon">◈</span>
         <span class="muscle-name">LEGS</span>
-        <span class="muscle-sub">Bacak & Core</span>
+        <span class="muscle-sub">Bacak · Core</span>
       </button>
     </div>
 
@@ -141,184 +152,24 @@
     <div id="muscleChest" class="muscle-page hidden">
       <button class="back-btn" onclick="hideMuscle()">← Geri</button>
       <div class="section-title">CHEST & SHOULDER & TRICEPS</div>
-
-      <div class="section-label">Chest</div>
-      <div class="card">
-        <div class="card-label">Plate Incline Press</div>
-        <div id="plate_incline_pressInfo" class="lift-info"></div>
-        <div class="input-row">
-          <input id="plate_incline_pressInput" placeholder="kg" type="number">
-          <button class="btn-sm" onclick="addLift('plate_incline_press')">Kaydet</button>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-label">Smith Low Incline Press</div>
-        <div id="smith_low_incline_pressInfo" class="lift-info"></div>
-        <div class="input-row">
-          <input id="smith_low_incline_pressInput" placeholder="kg" type="number">
-          <button class="btn-sm" onclick="addLift('smith_low_incline_press')">Kaydet</button>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-label">Chest Fly</div>
-        <div id="chest_flyInfo" class="lift-info"></div>
-        <div class="input-row">
-          <input id="chest_flyInput" placeholder="kg" type="number">
-          <button class="btn-sm" onclick="addLift('chest_fly')">Kaydet</button>
-        </div>
-      </div>
-
-      <div class="section-label">Shoulder</div>
-      <div class="card">
-        <div class="card-label">Shoulder Press</div>
-        <div id="machine_shoulder_pressInfo" class="lift-info"></div>
-        <div class="input-row">
-          <input id="machine_shoulder_pressInput" placeholder="kg" type="number">
-          <button class="btn-sm" onclick="addLift('machine_shoulder_press')">Kaydet</button>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-label">Lateral Raise</div>
-        <div id="lateral_raiseInfo" class="lift-info"></div>
-        <div class="input-row">
-          <input id="lateral_raiseInput" placeholder="kg" type="number">
-          <button class="btn-sm" onclick="addLift('lateral_raise')">Kaydet</button>
-        </div>
-      </div>
-
-      <div class="section-label">Triceps</div>
-      <div class="card">
-        <div class="card-label">Skullcrusher</div>
-        <div id="skullcrusherInfo" class="lift-info"></div>
-        <div class="input-row">
-          <input id="skullcrusherInput" placeholder="kg" type="number">
-          <button class="btn-sm" onclick="addLift('skullcrusher')">Kaydet</button>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-label">Triceps Pushdown</div>
-        <div id="Triceps_PushdownInfo" class="lift-info"></div>
-        <div class="input-row">
-          <input id="Triceps_PushdownInput" placeholder="kg" type="number">
-          <button class="btn-sm" onclick="addLift('Triceps_Pushdown')">Kaydet</button>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-label">Overhead Rope Extension</div>
-        <div id="Overhead_Rope_ExtensionInfo" class="lift-info"></div>
-        <div class="input-row">
-          <input id="Overhead_Rope_ExtensionInput" placeholder="kg" type="number">
-          <button class="btn-sm" onclick="addLift('Overhead_Rope_Extension')">Kaydet</button>
-        </div>
-      </div>
+      <div id="exerciseList-chest"></div>
+      <button class="add-exercise-btn" onclick="openAddExercise('chest')">＋ Hareket Ekle</button>
     </div>
 
     <!-- BACK -->
     <div id="muscleBack" class="muscle-page hidden">
       <button class="back-btn" onclick="hideMuscle()">← Geri</button>
       <div class="section-title">BACK & BICEPS</div>
-
-      <div class="section-label">Back</div>
-      <div class="card">
-        <div class="card-label">Lat Pulldown</div>
-        <div id="Lat_PulldownInfo" class="lift-info"></div>
-        <div class="input-row">
-          <input id="Lat_PulldownInput" placeholder="kg" type="number">
-          <button class="btn-sm" onclick="addLift('Lat_Pulldown')">Kaydet</button>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-label">Plate Loaded Wide Grip Row</div>
-        <div id="Plate_LoadedInfo" class="lift-info"></div>
-        <div class="input-row">
-          <input id="Plate_LoadedInput" placeholder="kg" type="number">
-          <button class="btn-sm" onclick="addLift('Plate_Loaded')">Kaydet</button>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-label">Cable Row</div>
-        <div id="Cable_RowInfo" class="lift-info"></div>
-        <div class="input-row">
-          <input id="Cable_RowInput" placeholder="kg" type="number">
-          <button class="btn-sm" onclick="addLift('Cable_Row')">Kaydet</button>
-        </div>
-      </div>
-
-      <div class="section-label">Biceps</div>
-      <div class="card">
-        <div class="card-label">Cable Curl</div>
-        <div id="Cable_CurlInfo" class="lift-info"></div>
-        <div class="input-row">
-          <input id="Cable_CurlInput" placeholder="kg" type="number">
-          <button class="btn-sm" onclick="addLift('Cable_Curl')">Kaydet</button>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-label">Incline Dumbbell Curl</div>
-        <div id="İncline_Dumbell_CurlInfo" class="lift-info"></div>
-        <div class="input-row">
-          <input id="İncline_Dumbell_CurlInput" placeholder="kg" type="number">
-          <button class="btn-sm" onclick="addLift('İncline_Dumbell_Curl')">Kaydet</button>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-label">Hammer Curl</div>
-        <div id="Hammer_CurlInfo" class="lift-info"></div>
-        <div class="input-row">
-          <input id="Hammer_CurlInput" placeholder="kg" type="number">
-          <button class="btn-sm" onclick="addLift('Hammer_Curl')">Kaydet</button>
-        </div>
-      </div>
+      <div id="exerciseList-back"></div>
+      <button class="add-exercise-btn" onclick="openAddExercise('back')">＋ Hareket Ekle</button>
     </div>
 
     <!-- LEGS -->
     <div id="muscleLegs" class="muscle-page hidden">
       <button class="back-btn" onclick="hideMuscle()">← Geri</button>
       <div class="section-title">LEGS & CORE</div>
-
-      <div class="section-label">Legs</div>
-      <div class="card">
-        <div class="card-label">Leg Press</div>
-        <div id="Leg_PressInfo" class="lift-info"></div>
-        <div class="input-row">
-          <input id="Leg_PressInput" placeholder="kg" type="number">
-          <button class="btn-sm" onclick="addLift('Leg_Press')">Kaydet</button>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-label">Smith Machine Squat</div>
-        <div id="Smith_Machine_SquatInfo" class="lift-info"></div>
-        <div class="input-row">
-          <input id="Smith_Machine_SquatInput" placeholder="kg" type="number">
-          <button class="btn-sm" onclick="addLift('Smith_Machine_Squat')">Kaydet</button>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-label">Leg Extension</div>
-        <div id="Leg_ExtansionInfo" class="lift-info"></div>
-        <div class="input-row">
-          <input id="Leg_ExtansionInput" placeholder="kg" type="number">
-          <button class="btn-sm" onclick="addLift('Leg_Extansion')">Kaydet</button>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-label">Seated Leg Curl</div>
-        <div id="Seated_Leg_CurlInfo" class="lift-info"></div>
-        <div class="input-row">
-          <input id="Seated_Leg_CurlInput" placeholder="kg" type="number">
-          <button class="btn-sm" onclick="addLift('Seated_Leg_Curl')">Kaydet</button>
-        </div>
-      </div>
-
-      <div class="section-label">Core</div>
-      <div class="card">
-        <div class="card-label">Cable Crunch</div>
-        <div id="Cable_CrunchInfo" class="lift-info"></div>
-        <div class="input-row">
-          <input id="Cable_CrunchInput" placeholder="kg" type="number">
-          <button class="btn-sm" onclick="addLift('Cable_Crunch')">Kaydet</button>
-        </div>
-      </div>
+      <div id="exerciseList-legs"></div>
+      <button class="add-exercise-btn" onclick="openAddExercise('legs')">＋ Hareket Ekle</button>
     </div>
   </div>
 
@@ -337,33 +188,39 @@
 
   <!-- BOTTOM NAV -->
   <nav class="bottom-nav">
-
-  <button class="nav-btn logout-nav" onclick="logoutUser()">
-    <span class="nav-icon">⎋</span><span class="nav-label">Çıkış</span>
-  </button>
-
-  <button class="nav-btn" id="nav-home" onclick="show('home')">
-    <span class="nav-icon">⌂</span><span class="nav-label">Ana</span>
-  </button>
-
-  <button class="nav-btn" id="nav-kilo" onclick="show('kilo')">
-    <span class="nav-icon">◎</span><span class="nav-label">Kilo</span>
-  </button>
-
-  <button class="nav-btn" id="nav-agirlik" onclick="show('agirlik')">
-    <span class="nav-icon">◈</span><span class="nav-label">Ağırlık</span>
-  </button>
-
-  <button class="nav-btn" id="nav-stats" onclick="show('stats')">
-    <span class="nav-icon">↗</span><span class="nav-label">Stats</span>
-  </button>
-
-</nav>
+    <button class="nav-btn logout-nav" onclick="logoutUser()">
+      <span class="nav-icon">⎋</span><span class="nav-label">Çıkış</span>
+    </button>
+    <button class="nav-btn" id="nav-home" onclick="show('home')">
+      <span class="nav-icon">⌂</span><span class="nav-label">Ana</span>
+    </button>
+    <button class="nav-btn" id="nav-kilo" onclick="show('kilo')">
+      <span class="nav-icon">◎</span><span class="nav-label">Kilo</span>
+    </button>
+    <button class="nav-btn" id="nav-agirlik" onclick="show('agirlik')">
+      <span class="nav-icon">◈</span><span class="nav-label">Ağırlık</span>
+    </button>
+    <button class="nav-btn" id="nav-stats" onclick="show('stats')">
+      <span class="nav-icon">↗</span><span class="nav-label">Stats</span>
+    </button>
+  </nav>
 
   <div class="signature">Emir Ünlütürk</div>
   <div id="toast"></div>
+</div>
 
-</div><!-- /app -->
+<!-- ADD EXERCISE MODAL -->
+<div id="addExerciseModal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div class="modal-title">Yeni Hareket Ekle</div>
+    <input id="newExerciseName" type="text" placeholder="Hareket adı (örn: Bench Press)">
+    <input id="newExerciseSection" type="text" placeholder="Grup (örn: Chest, Back, Legs...)">
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closeAddExercise()">İptal</button>
+      <button class="btn-modal-confirm" onclick="confirmAddExercise()">Ekle</button>
+    </div>
+  </div>
+</div>
 
 <script src="./script.js"></script>
 <script>

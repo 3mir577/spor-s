@@ -1,4 +1,3 @@
-
 console.log("FITNESS PRO MAX LOADED");
 
 // ================= FIREBASE =================
@@ -70,12 +69,12 @@ window.logoutUser = async function(){
 
 function authError(code){
   const map = {
-    "auth/user-not-found":    "Bu e-posta kayıtlı değil.",
-    "auth/wrong-password":    "Şifre hatalı.",
-    "auth/invalid-email":     "Geçersiz e-posta.",
+    "auth/user-not-found":       "Bu e-posta kayıtlı değil.",
+    "auth/wrong-password":       "Şifre hatalı.",
+    "auth/invalid-email":        "Geçersiz e-posta.",
     "auth/email-already-in-use": "Bu e-posta zaten kayıtlı.",
-    "auth/too-many-requests": "Çok fazla deneme. Biraz bekle.",
-    "auth/invalid-credential":"E-posta veya şifre hatalı."
+    "auth/too-many-requests":    "Çok fazla deneme. Biraz bekle.",
+    "auth/invalid-credential":   "E-posta veya şifre hatalı."
   };
   return map[code] || "Bir hata oluştu: " + code;
 }
@@ -101,20 +100,204 @@ function setActiveNav(page){
 
 // ================= MUSCLE SELECT =================
 window.showMuscle = function(group){
+  currentMuscleGroup = group;
   document.getElementById("muscleSelect").classList.add("hidden");
   document.getElementById("muscleChest").classList.add("hidden");
   document.getElementById("muscleBack").classList.add("hidden");
   document.getElementById("muscleLegs").classList.add("hidden");
   const map = { chest:"muscleChest", back:"muscleBack", legs:"muscleLegs" };
   document.getElementById(map[group]).classList.remove("hidden");
-  loadData();
+  renderExercises(group);
 };
 
 window.hideMuscle = function(){
+  currentMuscleGroup = null;
   document.getElementById("muscleSelect").classList.remove("hidden");
   document.getElementById("muscleChest").classList.add("hidden");
   document.getElementById("muscleBack").classList.add("hidden");
   document.getElementById("muscleLegs").classList.add("hidden");
+};
+
+// ================= CUSTOM EXERCISES =================
+let currentMuscleGroup = null;
+
+// Default exercises per group
+const DEFAULT_EXERCISES = {
+  chest: [
+    { id:"plate_incline_press",     name:"Plate Incline Press",        section:"Chest" },
+    { id:"smith_low_incline_press", name:"Smith Low Incline Press",    section:"Chest" },
+    { id:"chest_fly",               name:"Chest Fly",                  section:"Chest" },
+    { id:"machine_shoulder_press",  name:"Shoulder Press",             section:"Shoulder" },
+    { id:"lateral_raise",           name:"Lateral Raise",              section:"Shoulder" },
+    { id:"skullcrusher",            name:"Skullcrusher",               section:"Triceps" },
+    { id:"Triceps_Pushdown",        name:"Triceps Pushdown",           section:"Triceps" },
+    { id:"Overhead_Rope_Extension", name:"Overhead Rope Extension",    section:"Triceps" },
+  ],
+  back: [
+    { id:"Lat_Pulldown",            name:"Lat Pulldown",               section:"Back" },
+    { id:"Plate_Loaded",            name:"Plate Loaded Wide Grip Row", section:"Back" },
+    { id:"Cable_Row",               name:"Cable Row",                  section:"Back" },
+    { id:"Cable_Curl",              name:"Cable Curl",                 section:"Biceps" },
+    { id:"İncline_Dumbell_Curl",    name:"Incline Dumbbell Curl",      section:"Biceps" },
+    { id:"Hammer_Curl",             name:"Hammer Curl",                section:"Biceps" },
+  ],
+  legs: [
+    { id:"Leg_Press",               name:"Leg Press",                  section:"Legs" },
+    { id:"Smith_Machine_Squat",     name:"Smith Machine Squat",        section:"Legs" },
+    { id:"Leg_Extansion",           name:"Leg Extension",              section:"Legs" },
+    { id:"Seated_Leg_Curl",         name:"Seated Leg Curl",            section:"Legs" },
+    { id:"Cable_Crunch",            name:"Cable Crunch",               section:"Core" },
+  ]
+};
+
+// Get exercises for a group (default + user-added)
+async function getExercises(group) {
+  const defaults = DEFAULT_EXERCISES[group] || [];
+  if (!uid()) return defaults;
+  try {
+    const snap = await db.collection("users").doc(uid())
+      .collection("customExercises").where("group","==",group).get();
+    const custom = [];
+    snap.forEach(d => custom.push(d.data()));
+    return [...defaults, ...custom];
+  } catch(e) {
+    return defaults;
+  }
+}
+
+// Render exercise cards for a muscle group
+async function renderExercises(group) {
+  const container = document.getElementById("exerciseList-" + group);
+  if (!container) return;
+  container.innerHTML = '<div style="color:#333;font-size:12px;text-align:center;padding:20px">Yükleniyor...</div>';
+
+  const exercises = await getExercises(group);
+  const allTimeSnap = uid() ? await db.collection("users").doc(uid()).collection("lifts").orderBy("time").get() : null;
+  const allTimeLifts = [];
+  if (allTimeSnap) allTimeSnap.forEach(d => allTimeLifts.push(d.data()));
+
+  const ago14 = Date.now() - 14*24*60*60*1000;
+  const recentSnap = uid() ? await db.collection("users").doc(uid()).collection("lifts")
+    .orderBy("time").where("time",">=",ago14).get() : null;
+  const recentLifts = [];
+  if (recentSnap) recentSnap.forEach(d => recentLifts.push(d.data()));
+
+  // Group by section
+  const sections = {};
+  exercises.forEach(ex => {
+    if (!sections[ex.section]) sections[ex.section] = [];
+    sections[ex.section].push(ex);
+  });
+
+  let html = "";
+  for (const [sectionName, exList] of Object.entries(sections)) {
+    html += `<div class="exercise-section-label">${sectionName}</div>`;
+    exList.forEach(ex => {
+      const allE  = allTimeLifts.filter(l => l.type === ex.id);
+      const pr    = allE.length ? Math.max(...allE.map(e => e.value)) : null;
+      const recE  = recentLifts.filter(l => l.type === ex.id).sort((a,b) => a.time-b.time);
+      const last  = recE.length ? recE[recE.length-1].value : null;
+      let prev    = null;
+      if(recE.length >= 2){
+        const lastDate = recE[recE.length-1].date;
+        for(let i = recE.length-2; i >= 0; i--){
+          if(recE[i].date !== lastDate){ prev = recE[i].value; break; }
+        }
+      }
+      let badges = "";
+      if(pr   !== null) badges += `<span class="pr-badge">PR ${pr} kg</span>`;
+      if(last !== null) badges += `<span class="last-val">Son: ${last} kg</span>`;
+      if(prev !== null){
+        const diff = last - prev;
+        const cls  = diff > 0 ? "diff-up" : diff < 0 ? "diff-down" : "diff-same";
+        badges += `<span class="${cls}">${diff > 0 ? "+" : ""}${diff.toFixed(1)} kg</span>`;
+      }
+      const inputId  = "liftInput_" + ex.id;
+      const isCustom = !DEFAULT_EXERCISES[group]?.find(d => d.id === ex.id);
+      html += `
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <div class="card-label">${ex.name}</div>
+            ${isCustom ? `<button onclick="deleteExercise('${ex.id}','${group}')" style="width:auto;padding:4px 10px;margin:0;font-size:10px;background:transparent;color:#444;border:1px solid #222;border-radius:99px;box-shadow:none;letter-spacing:0" title="Sil">✕</button>` : ''}
+          </div>
+          <div class="lift-info">${badges}</div>
+          <div class="input-row">
+            <input id="${inputId}" placeholder="kg" type="number">
+            <button class="btn-sm" onclick="addLiftDynamic('${ex.id}','${group}')">Kaydet</button>
+          </div>
+        </div>`;
+    });
+  }
+
+  container.innerHTML = html;
+}
+
+// Add lift from dynamic card
+window.addLiftDynamic = async function(exerciseId, group) {
+  const inputEl = document.getElementById("liftInput_" + exerciseId);
+  if (!inputEl || !inputEl.value || !uid()) return;
+  const val = Number(inputEl.value);
+
+  const prSnap = await db.collection("users").doc(uid()).collection("lifts")
+    .where("type","==",exerciseId).get();
+  let currentPR = 0;
+  prSnap.forEach(d => { if(d.data().value > currentPR) currentPR = d.data().value; });
+
+  await db.collection("users").doc(uid()).collection("lifts").add({
+    type: exerciseId, value: val, date: today(), time: Date.now()
+  });
+
+  if(val > currentPR && currentPR > 0){
+    showToast("🏆 PR kırdın! +" + (val - currentPR).toFixed(1) + " kg");
+  } else if(currentPR === 0){
+    showToast("✅ Kaydedildi!");
+  } else {
+    showToast("💾 Kaydedildi — PR: " + currentPR + " kg");
+  }
+
+  inputEl.value = "";
+  renderExercises(group);
+  loadData();
+};
+
+// Add exercise modal
+window.openAddExercise = function(group) {
+  currentMuscleGroup = group;
+  document.getElementById("newExerciseName").value = "";
+  document.getElementById("newExerciseSection").value = "";
+  document.getElementById("addExerciseModal").classList.remove("hidden");
+};
+
+window.closeAddExercise = function() {
+  document.getElementById("addExerciseModal").classList.add("hidden");
+};
+
+window.confirmAddExercise = async function() {
+  const name    = document.getElementById("newExerciseName").value.trim();
+  const section = document.getElementById("newExerciseSection").value.trim();
+  if (!name || !section || !uid() || !currentMuscleGroup) {
+    showToast("⚠️ İsim ve grup gir");
+    return;
+  }
+  // Create a safe id from name
+  const id = "custom_" + name.toLowerCase().replace(/[^a-z0-9]/g, "_") + "_" + Date.now();
+  await db.collection("users").doc(uid()).collection("customExercises").add({
+    id, name, section, group: currentMuscleGroup, createdAt: Date.now()
+  });
+  closeAddExercise();
+  showToast("✅ Hareket eklendi!");
+  renderExercises(currentMuscleGroup);
+};
+
+window.deleteExercise = async function(exerciseId, group) {
+  if (!uid()) return;
+  const snap = await db.collection("users").doc(uid()).collection("customExercises")
+    .where("id","==",exerciseId).get();
+  const batch = db.batch();
+  snap.forEach(d => batch.delete(d.ref));
+  await batch.commit();
+  showToast("🗑️ Hareket silindi");
+  renderExercises(group);
 };
 
 // ================= QUOTES =================
@@ -143,7 +326,9 @@ window.newQuote = function(){
 window.setGoal = async function(){
   const g = document.getElementById("goalInput").value;
   if(!g || !uid()) return;
+  // Sadece bu kullanıcının settings koleksiyonuna yaz
   await db.collection("users").doc(uid()).collection("settings").doc("goal").set({ value: Number(g) });
+  showToast("🎯 Hedef kaydedildi!");
   loadData();
 };
 
@@ -151,37 +336,12 @@ window.setGoal = async function(){
 window.addWeight = async function(){
   const w = document.getElementById("weightInput").value;
   if(!w || !uid()) return;
+  // Kullanıcıya özel koleksiyon (uid() ile)
   await db.collection("users").doc(uid()).collection("weights").add({
     value: Number(w), date: today(), time: Date.now()
   });
   document.getElementById("weightInput").value = "";
   showToast("⚖️ Kilo kaydedildi!");
-  loadData();
-};
-
-// ================= LIFT =================
-window.addLift = async function(type){
-  const v = document.getElementById(type + "Input").value;
-  if(!v || !uid()) return;
-  const val = Number(v);
-
-  const prSnap = await db.collection("users").doc(uid()).collection("lifts").where("type","==",type).get();
-  let currentPR = 0;
-  prSnap.forEach(d => { if(d.data().value > currentPR) currentPR = d.data().value; });
-
-  await db.collection("users").doc(uid()).collection("lifts").add({
-    type, value: val, date: today(), time: Date.now()
-  });
-
-  if(val > currentPR && currentPR > 0){
-    showToast("🏆 PR kırdın! +" + (val - currentPR).toFixed(1) + " kg");
-  } else if(currentPR === 0){
-    showToast("✅ Kaydedildi!");
-  } else {
-    showToast("💾 Kaydedildi — PR: " + currentPR + " kg");
-  }
-
-  document.getElementById(type + "Input").value = "";
   loadData();
 };
 
@@ -198,80 +358,49 @@ function showToast(msg){
 async function loadData(){
   if(!uid()) return;
   try {
+    // Her kullanıcı kendi uid() yolu altındaki verileri görür
     const userRef = db.collection("users").doc(uid());
 
-    // WEIGHTS
+    // WEIGHTS — sadece bu kullanıcının verileri
     const wSnap = await userRef.collection("weights").orderBy("time").get();
     const weights = [];
     wSnap.forEach(d => weights.push(d.data()));
 
     if(weights.length){
-      document.getElementById("todayWeight").textContent = weights[weights.length-1].value + " kg";
+      document.getElementById("todayWeight").textContent = weights[weights.length-1].value;
+    } else {
+      document.getElementById("todayWeight").textContent = "—";
     }
 
     // GOAL
     const goalSnap = await userRef.collection("settings").doc("goal").get();
     if(goalSnap.exists && goalSnap.data().value !== undefined){
       const goal = goalSnap.data().value;
+      document.getElementById("goalDisplay").textContent = goal;
       document.getElementById("goalText").textContent = "Hedef: " + goal + " kg";
       if(weights.length){
-        const cur = weights[weights.length-1].value;
+        const cur   = weights[weights.length-1].value;
         const first = weights[0].value;
         let pct = 0;
         if(first !== goal) pct = Math.min(100, Math.max(0, ((first-cur)/(first-goal))*100));
         document.getElementById("progressBar").style.width = pct + "%";
       }
     } else {
-      document.getElementById("goalText").textContent = "Hedef: —";
+      document.getElementById("goalDisplay").textContent = "—";
+      document.getElementById("goalText").textContent = "Hedef belirlenmedi";
     }
 
-    // LIFTS — tüm zamanlar (PR için)
+    // LIFTS
     const allTimeSnap = await userRef.collection("lifts").orderBy("time").get();
     const allTimeLifts = [];
     allTimeSnap.forEach(d => allTimeLifts.push(d.data()));
 
-    // LIFTS — son 14 gün (karşılaştırma için)
     const ago14 = Date.now() - 14*24*60*60*1000;
     const lSnap = await userRef.collection("lifts").orderBy("time").where("time",">=",ago14).get();
     const recentLifts = [];
     lSnap.forEach(d => recentLifts.push(d.data()));
 
-    const LIFT_TYPES = [
-      "plate_incline_press","smith_low_incline_press","chest_fly",
-      "machine_shoulder_press","lateral_raise","skullcrusher",
-      "Triceps_Pushdown","Overhead_Rope_Extension",
-      "Lat_Pulldown","Plate_Loaded","Cable_Row",
-      "Cable_Curl","İncline_Dumbell_Curl","Hammer_Curl",
-      "Leg_Press","Smith_Machine_Squat","Leg_Extansion",
-      "Seated_Leg_Curl","Cable_Crunch"
-    ];
-
-    LIFT_TYPES.forEach(type => {
-      const allE  = allTimeLifts.filter(l => l.type === type);
-      const pr    = allE.length ? Math.max(...allE.map(e => e.value)) : null;
-      const recE  = recentLifts.filter(l => l.type === type).sort((a,b) => a.time-b.time);
-      const last  = recE.length ? recE[recE.length-1].value : null;
-      let prev    = null;
-      if(recE.length >= 2){
-        const lastDate = recE[recE.length-1].date;
-        for(let i = recE.length-2; i >= 0; i--){
-          if(recE[i].date !== lastDate){ prev = recE[i].value; break; }
-        }
-      }
-      const el = document.getElementById(type + "Info");
-      if(!el) return;
-      let html = "";
-      if(pr   !== null) html += `<span class="pr-badge">PR ${pr} kg</span>`;
-      if(last !== null) html += `<span class="last-val">Son: ${last} kg</span>`;
-      if(prev !== null){
-        const diff = last - prev;
-        const cls  = diff > 0 ? "diff-up" : diff < 0 ? "diff-down" : "diff-same";
-        html += `<span class="${cls}">${diff > 0 ? "+" : ""}${diff.toFixed(1)} kg</span>`;
-      }
-      el.innerHTML = html;
-    });
-
-    // BENCH PR
+    // BENCH PR (smith_low_incline_press)
     const benchAll = allTimeLifts.filter(l => l.type === "smith_low_incline_press");
     const benchMax = benchAll.length ? Math.max(...benchAll.map(e => e.value)) : 0;
     document.getElementById("benchMax").textContent = benchMax ? benchMax + " kg" : "—";
@@ -306,8 +435,8 @@ let weightChart, weightChartStats, liftChart;
 const chartOpts = {
   plugins:{ legend:{display:false} },
   scales:{
-    x:{ ticks:{color:"#444", font:{size:10}}, grid:{color:"rgba(255,255,255,0.03)"} },
-    y:{ ticks:{color:"#444", font:{size:10}}, grid:{color:"rgba(255,255,255,0.03)"} }
+    x:{ ticks:{color:"#333", font:{size:10, family:"Space Grotesk"}}, grid:{color:"rgba(255,255,255,0.03)"} },
+    y:{ ticks:{color:"#333", font:{size:10, family:"Space Grotesk"}}, grid:{color:"rgba(255,255,255,0.03)"} }
   }
 };
 
@@ -318,8 +447,8 @@ function drawWeightChart(weights){
   weightChart = new Chart(ctx, {
     type:"line",
     data:{ labels:weights.map(w=>w.date), datasets:[{
-      data:weights.map(w=>w.value), borderColor:"rgba(255,255,255,0.7)",
-      backgroundColor:"rgba(255,255,255,0.04)", tension:0.4,
+      data:weights.map(w=>w.value), borderColor:"rgba(255,255,255,0.65)",
+      backgroundColor:"rgba(255,255,255,0.03)", tension:0.4,
       pointRadius:3, pointBackgroundColor:"#fff"
     }]},
     options: chartOpts
@@ -333,8 +462,8 @@ function drawStatsCharts(weights, lifts){
     weightChartStats = new Chart(ctx2, {
       type:"line",
       data:{ labels:weights.map(w=>w.date), datasets:[{
-        data:weights.map(w=>w.value), borderColor:"rgba(255,255,255,0.7)",
-        backgroundColor:"rgba(255,255,255,0.04)", tension:0.4,
+        data:weights.map(w=>w.value), borderColor:"rgba(255,255,255,0.65)",
+        backgroundColor:"rgba(255,255,255,0.03)", tension:0.4,
         pointRadius:3, pointBackgroundColor:"#fff"
       }]},
       options: chartOpts
@@ -347,8 +476,8 @@ function drawStatsCharts(weights, lifts){
     liftChart = new Chart(ctx3, {
       type:"line",
       data:{ labels:bd.map(l=>l.date), datasets:[{
-        data:bd.map(l=>l.value), borderColor:"rgba(255,255,255,0.7)",
-        backgroundColor:"rgba(255,255,255,0.04)", tension:0.4,
+        data:bd.map(l=>l.value), borderColor:"rgba(255,255,255,0.65)",
+        backgroundColor:"rgba(255,255,255,0.03)", tension:0.4,
         pointRadius:3, pointBackgroundColor:"#fff"
       }]},
       options: chartOpts
@@ -356,27 +485,21 @@ function drawStatsCharts(weights, lifts){
   }
 }
 
+// ================= STARS =================
 function createStars() {
   const container = document.querySelector(".stars");
   if (!container) return;
-
-  const count = 120; // yıldız sayısı
-
-  for (let i = 0; i < count; i++) {
+  for (let i = 0; i < 120; i++) {
     const star = document.createElement("div");
     star.className = "star";
-
-    star.style.top = Math.random() * 100 + "%";
-    star.style.left = Math.random() * 100 + "%";
-
+    star.style.top    = Math.random() * 100 + "%";
+    star.style.left   = Math.random() * 100 + "%";
     star.style.animationDuration = (1 + Math.random() * 3) + "s";
-    star.style.opacity = Math.random();
-
+    star.style.animationDelay    = (Math.random() * 3) + "s";
+    star.style.opacity = Math.random() * 0.5;
     container.appendChild(star);
   }
 }
-
 createStars();
 
 window.db = db;
-JSEOF
