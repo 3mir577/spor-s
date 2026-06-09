@@ -271,7 +271,7 @@ body {
 }
 
 /* ── PROGRESS CARD ── */
-.progress-card { }
+
 .progress-card-label {
   font-size: 10px;
   font-weight: 700;
@@ -328,7 +328,7 @@ body {
 }
 
 /* ── QUOTE CARD ── */
-.quote-card { }
+
 .quote-mark {
   font-family: var(--font-display);
   font-size: 3rem; font-weight: 800;
@@ -469,7 +469,7 @@ button:active { transform: translateY(0); box-shadow: none; }
 }
 
 /* ── MUSCLE PAGE ── */
-.muscle-page { }
+
 .back-btn {
   background: transparent !important;
   color: var(--text-dim) !important;
