@@ -14,6 +14,24 @@ firebase.initializeApp(firebaseConfig);
 const db   = firebase.firestore();
 const auth = firebase.auth();
 
+// ================= THEME =================
+function applyTheme(mode) {
+  if (mode === "light") {
+    document.body.classList.add("light-mode");
+  } else {
+    document.body.classList.remove("light-mode");
+  }
+  localStorage.setItem("fpm_theme", mode);
+}
+
+window.toggleTheme = function() {
+  const current = localStorage.getItem("fpm_theme") || "dark";
+  applyTheme(current === "dark" ? "light" : "dark");
+};
+
+// Sayfa açılışında temayı uygula
+applyTheme(localStorage.getItem("fpm_theme") || "dark");
+
 // ================= AUTH STATE =================
 auth.onAuthStateChanged(user => {
   document.getElementById("splash").style.display = "none";
@@ -90,6 +108,11 @@ window.show = function(page){
   hideMuscle();
   setActiveNav(page);
   loadData();
+  if (page === "kalori") {
+    renderFoods();
+    loadMealLog();
+    loadCalorieSetting();
+  }
 };
 
 function setActiveNav(page){
@@ -149,7 +172,6 @@ const DEFAULT_EXERCISES = {
   ]
 };
 
-// Fetch hidden default exercise IDs for this user
 async function getHiddenDefaults() {
   if (!uid()) return [];
   try {
@@ -160,7 +182,6 @@ async function getHiddenDefaults() {
   } catch(e) { return []; }
 }
 
-// Get visible exercises for a group (filtered defaults + user-added custom)
 async function getExercises(group) {
   const hidden  = await getHiddenDefaults();
   const defaults = (DEFAULT_EXERCISES[group] || []).filter(ex => !hidden.includes(ex.id));
@@ -174,7 +195,6 @@ async function getExercises(group) {
   } catch(e) { return defaults; }
 }
 
-// Render exercise cards
 async function renderExercises(group) {
   const container = document.getElementById("exerciseList-" + group);
   if (!container) return;
@@ -195,7 +215,6 @@ async function renderExercises(group) {
   const recentLifts = [];
   if (recentSnap) recentSnap.forEach(d => recentLifts.push(d.data()));
 
-  // Group by section
   const sections = {};
   exercises.forEach(ex => {
     if (!sections[ex.section]) sections[ex.section] = [];
@@ -228,7 +247,6 @@ async function renderExercises(group) {
 
       const inputId  = "liftInput_" + ex.id;
       const isCustom = !DEFAULT_EXERCISES[group]?.find(d => d.id === ex.id);
-      // Her hareketin silinebilir olması için — default'lar "gizlenir", custom'lar silinir
       const deleteBtn = `<button class="delete-ex-btn" onclick="deleteExercise('${ex.id}','${group}',${isCustom})" title="Kaldır">✕</button>`;
 
       html += `
@@ -253,25 +271,21 @@ async function renderExercises(group) {
   container.innerHTML = html;
 }
 
-// Delete or hide exercise
 window.deleteExercise = async function(exerciseId, group, isCustom) {
   if (!uid()) return;
   if (isCustom) {
-    // Custom: gerçekten sil
     const snap = await db.collection("users").doc(uid()).collection("customExercises")
       .where("id","==",exerciseId).get();
     const batch = db.batch();
     snap.forEach(d => batch.delete(d.ref));
     await batch.commit();
   } else {
-    // Default: bu kullanıcı için gizle
     await db.collection("users").doc(uid()).collection("hiddenDefaults").doc(exerciseId).set({ hidden: true });
   }
   showToast("🗑️ Hareket kaldırıldı");
   renderExercises(group);
 };
 
-// Add lift
 window.addLiftDynamic = async function(exerciseId, group) {
   const inputEl = document.getElementById("liftInput_" + exerciseId);
   if (!inputEl || !inputEl.value || !uid()) return;
@@ -299,7 +313,6 @@ window.addLiftDynamic = async function(exerciseId, group) {
   loadData();
 };
 
-// Add exercise modal
 window.openAddExercise = function(group) {
   currentMuscleGroup = group;
   document.getElementById("newExerciseName").value = "";
@@ -385,7 +398,6 @@ async function loadData(){
   try {
     const userRef = db.collection("users").doc(uid());
 
-    // WEIGHTS — sadece bu kullanıcının
     const wSnap = await userRef.collection("weights").orderBy("time").get();
     const weights = [];
     wSnap.forEach(d => weights.push(d.data()));
@@ -393,7 +405,6 @@ async function loadData(){
     document.getElementById("todayWeight").textContent =
       weights.length ? weights[weights.length-1].value : "—";
 
-    // GOAL
     const goalSnap = await userRef.collection("settings").doc("goal").get();
     if(goalSnap.exists && goalSnap.data().value !== undefined){
       const goal = goalSnap.data().value;
@@ -411,7 +422,6 @@ async function loadData(){
       document.getElementById("goalText").textContent = "Hedef belirlenmedi";
     }
 
-    // LIFTS
     const allTimeSnap = await userRef.collection("lifts").orderBy("time").get();
     const allTimeLifts = [];
     allTimeSnap.forEach(d => allTimeLifts.push(d.data()));
@@ -421,17 +431,16 @@ async function loadData(){
     const recentLifts = [];
     lSnap.forEach(d => recentLifts.push(d.data()));
 
-    // BENCH PR
     const benchAll = allTimeLifts.filter(l => l.type === "smith_low_incline_press");
     const benchMax = benchAll.length ? Math.max(...benchAll.map(e => e.value)) : 0;
     document.getElementById("benchMax").textContent = benchMax ? benchMax + " kg" : "—";
 
-    // STREAK
     updateStreak(weights);
-
-    // CHARTS
     drawWeightChart(weights);
     drawStatsCharts(weights, recentLifts);
+
+    // Kalori ayarını da yükle (ana ekran için)
+    loadCalorieSetting();
 
   } catch(err){ console.error("LOAD ERROR:", err); }
 }
@@ -453,13 +462,19 @@ function updateStreak(weights){
 
 // ================= CHARTS =================
 let weightChart, weightChartStats, liftChart;
-const chartOpts = {
-  plugins:{ legend:{display:false} },
-  scales:{
-    x:{ ticks:{color:"#333", font:{size:10, family:"Space Grotesk"}}, grid:{color:"rgba(255,255,255,0.03)"} },
-    y:{ ticks:{color:"#333", font:{size:10, family:"Space Grotesk"}}, grid:{color:"rgba(255,255,255,0.03)"} }
-  }
-};
+
+function getChartOpts() {
+  const isLight = document.body.classList.contains("light-mode");
+  const tickColor = isLight ? "#999" : "#333";
+  const gridColor = isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.03)";
+  return {
+    plugins:{ legend:{display:false} },
+    scales:{
+      x:{ ticks:{color:tickColor, font:{size:10, family:"Space Grotesk"}}, grid:{color:gridColor} },
+      y:{ ticks:{color:tickColor, font:{size:10, family:"Space Grotesk"}}, grid:{color:gridColor} }
+    }
+  };
+}
 
 function drawWeightChart(weights){
   const ctx = document.getElementById("weightChart");
@@ -472,7 +487,7 @@ function drawWeightChart(weights){
       backgroundColor:"rgba(255,255,255,0.03)", tension:0.4,
       pointRadius:3, pointBackgroundColor:"#fff"
     }]},
-    options: chartOpts
+    options: getChartOpts()
   });
 }
 
@@ -487,7 +502,7 @@ function drawStatsCharts(weights, lifts){
         backgroundColor:"rgba(255,255,255,0.03)", tension:0.4,
         pointRadius:3, pointBackgroundColor:"#fff"
       }]},
-      options: chartOpts
+      options: getChartOpts()
     });
   }
   const ctx3 = document.getElementById("liftChart");
@@ -501,9 +516,251 @@ function drawStatsCharts(weights, lifts){
         backgroundColor:"rgba(255,255,255,0.03)", tension:0.4,
         pointRadius:3, pointBackgroundColor:"#fff"
       }]},
-      options: chartOpts
+      options: getChartOpts()
     });
   }
+}
+
+// ================= KALORİ HESAPLAMA =================
+let selectedGender   = "male";
+let selectedActivity = 1.55;
+let lastCalcTDEE     = 0;
+
+window.selectGender = function(g) {
+  selectedGender = g;
+  document.getElementById("genderMale").classList.toggle("active",   g === "male");
+  document.getElementById("genderFemale").classList.toggle("active", g === "female");
+};
+
+window.selectActivity = function(btn) {
+  document.querySelectorAll(".activity-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  selectedActivity = parseFloat(btn.dataset.val);
+};
+
+window.calcCalories = function() {
+  const age    = parseInt(document.getElementById("calAge").value);
+  const height = parseInt(document.getElementById("calHeight").value);
+  const weight = parseInt(document.getElementById("calWeight").value);
+
+  if (!age || !height || !weight) { showToast("⚠️ Yaş, boy ve kilo gir"); return; }
+
+  // Mifflin-St Jeor BMR
+  let bmr;
+  if (selectedGender === "male") {
+    bmr = 10 * weight + 6.25 * height - 5 * age + 5;
+  } else {
+    bmr = 10 * weight + 6.25 * height - 5 * age - 161;
+  }
+
+  const tdee = Math.round(bmr * selectedActivity);
+  lastCalcTDEE = tdee;
+
+  document.getElementById("calLose").textContent = (tdee - 500).toLocaleString("tr-TR");
+  document.getElementById("calKeep").textContent = tdee.toLocaleString("tr-TR");
+  document.getElementById("calGain").textContent = (tdee + 500).toLocaleString("tr-TR");
+
+  document.getElementById("calResult").classList.remove("hidden");
+};
+
+window.saveCalorieGoal = async function(type) {
+  if (!lastCalcTDEE) { showToast("⚠️ Önce hesapla"); return; }
+  const map = { lose: lastCalcTDEE - 500, keep: lastCalcTDEE, gain: lastCalcTDEE + 500 };
+  const labelMap = { lose: "Zayıflama", keep: "Koruma", gain: "Kilo alma" };
+  const val = map[type];
+
+  if (uid()) {
+    const age    = parseInt(document.getElementById("calAge").value);
+    const height = parseInt(document.getElementById("calHeight").value);
+    const weight = parseInt(document.getElementById("calWeight").value);
+    await db.collection("users").doc(uid()).collection("settings").doc("calories").set({
+      value: val, gender: selectedGender, age, height, weight,
+      activity: selectedActivity, goalType: type, updatedAt: Date.now()
+    });
+  }
+
+  const dispEl = document.getElementById("dailyCalDisplay");
+  if (dispEl) dispEl.textContent = val.toLocaleString("tr-TR");
+
+  showToast("🔥 " + labelMap[type] + " modu: " + val.toLocaleString("tr-TR") + " kcal/gün");
+};
+
+async function loadCalorieSetting() {
+  if (!uid()) return;
+  try {
+    const snap = await db.collection("users").doc(uid()).collection("settings").doc("calories").get();
+    if (snap.exists && snap.data().value) {
+      const d = snap.data();
+      const dispEl = document.getElementById("dailyCalDisplay");
+      if (dispEl) dispEl.textContent = d.value.toLocaleString("tr-TR");
+
+      // Formu doldur (kalori sayfasındaysa)
+      const ageEl = document.getElementById("calAge");
+      if (ageEl && d.age) ageEl.value = d.age;
+      const htEl = document.getElementById("calHeight");
+      if (htEl && d.height) htEl.value = d.height;
+      const wtEl = document.getElementById("calWeight");
+      if (wtEl && d.weight) wtEl.value = d.weight;
+      if (d.gender) selectGender(d.gender);
+      if (d.activity) {
+        selectedActivity = d.activity;
+        document.querySelectorAll(".activity-btn").forEach(b => {
+          b.classList.toggle("active", parseFloat(b.dataset.val) === d.activity);
+        });
+      }
+      // Sonuç göster
+      if (d.age && d.height && d.weight) {
+        lastCalcTDEE = Math.round(d.value + (d.goalType === "lose" ? 500 : d.goalType === "gain" ? -500 : 0));
+        document.getElementById("calLose") && (document.getElementById("calLose").textContent = (lastCalcTDEE - 500).toLocaleString("tr-TR"));
+        document.getElementById("calKeep") && (document.getElementById("calKeep").textContent = lastCalcTDEE.toLocaleString("tr-TR"));
+        document.getElementById("calGain") && (document.getElementById("calGain").textContent = (lastCalcTDEE + 500).toLocaleString("tr-TR"));
+        const resEl = document.getElementById("calResult");
+        if (resEl) resEl.classList.remove("hidden");
+      }
+    }
+  } catch(e) { console.error("cal setting load err", e); }
+}
+
+// ================= YEMEK VERİTABANI =================
+const FOODS = [
+  { name:"Beyaz pilav",             unit:"100g",               kcal:130,  cat:"Karbonhidrat" },
+  { name:"Esmer pilav",             unit:"100g",               kcal:110,  cat:"Karbonhidrat" },
+  { name:"Makarna (haşlanmış)",     unit:"100g",               kcal:131,  cat:"Karbonhidrat" },
+  { name:"Ekmek",                   unit:"1 dilim (30g)",      kcal:80,   cat:"Karbonhidrat" },
+  { name:"Yulaf ezmesi",            unit:"100g",               kcal:68,   cat:"Karbonhidrat" },
+  { name:"Tatlı patates",           unit:"100g",               kcal:86,   cat:"Karbonhidrat" },
+  { name:"Patates (haşlanmış)",     unit:"100g",               kcal:77,   cat:"Karbonhidrat" },
+  { name:"Muz",                     unit:"1 orta (120g)",      kcal:107,  cat:"Karbonhidrat" },
+  { name:"Tavuk göğsü",             unit:"100g",               kcal:165,  cat:"Protein" },
+  { name:"Tavuk but (derisiz)",     unit:"100g",               kcal:177,  cat:"Protein" },
+  { name:"Kırmızı et (dana)",       unit:"100g",               kcal:250,  cat:"Protein" },
+  { name:"Ton balığı (konserve)",   unit:"100g",               kcal:116,  cat:"Protein" },
+  { name:"Somon",                   unit:"100g",               kcal:208,  cat:"Protein" },
+  { name:"Yumurta",                 unit:"1 adet (50g)",       kcal:70,   cat:"Protein" },
+  { name:"Yumurta akı",             unit:"1 adet",             kcal:17,   cat:"Protein" },
+  { name:"Süzme peynir (lor)",      unit:"100g",               kcal:98,   cat:"Protein" },
+  { name:"Kuru fasulye (pişmiş)",   unit:"100g",               kcal:127,  cat:"Protein" },
+  { name:"Nohut (pişmiş)",          unit:"100g",               kcal:164,  cat:"Protein" },
+  { name:"Yağlı süt (%3.5)",        unit:"200ml",              kcal:124,  cat:"Süt Ürünleri" },
+  { name:"Yağsız süt",              unit:"200ml",              kcal:68,   cat:"Süt Ürünleri" },
+  { name:"Yoğurt (sade)",           unit:"100g",               kcal:61,   cat:"Süt Ürünleri" },
+  { name:"Süzme yoğurt",            unit:"100g",               kcal:97,   cat:"Süt Ürünleri" },
+  { name:"Beyaz peynir",            unit:"30g",                kcal:75,   cat:"Süt Ürünleri" },
+  { name:"Whey protein tozu",       unit:"1 ölçek (30g)",      kcal:120,  cat:"Süt Ürünleri" },
+  { name:"Zeytinyağı",              unit:"1 yemek kaşığı",     kcal:119,  cat:"Sağlıklı Yağ" },
+  { name:"Fıstık ezmesi",           unit:"2 yemek kaşığı",     kcal:190,  cat:"Sağlıklı Yağ" },
+  { name:"Badem",                   unit:"30g",                kcal:174,  cat:"Sağlıklı Yağ" },
+  { name:"Avokado",                 unit:"yarım (75g)",        kcal:120,  cat:"Sağlıklı Yağ" },
+  { name:"Brokoli",                 unit:"100g",               kcal:34,   cat:"Sebze" },
+  { name:"Ispanak",                 unit:"100g",               kcal:23,   cat:"Sebze" },
+  { name:"Salatalık",               unit:"100g",               kcal:15,   cat:"Sebze" },
+  { name:"Domates",                 unit:"100g",               kcal:18,   cat:"Sebze" },
+];
+
+let mealLog = [];
+
+function renderFoods(filter) {
+  const container = document.getElementById("foodList");
+  if (!container) return;
+
+  const lower = (filter || "").toLowerCase();
+  const filtered = lower
+    ? FOODS.filter(f => f.name.toLowerCase().includes(lower) || f.cat.toLowerCase().includes(lower))
+    : FOODS;
+
+  const cats = {};
+  filtered.forEach(f => {
+    if (!cats[f.cat]) cats[f.cat] = [];
+    cats[f.cat].push(f);
+  });
+
+  let html = "";
+  for (const [cat, foods] of Object.entries(cats)) {
+    html += `<div class="exercise-section-label">${cat}</div>`;
+    foods.forEach(f => {
+      const idx = FOODS.indexOf(f);
+      html += `
+        <div class="food-item">
+          <div class="food-item-left">
+            <div class="food-item-name">${f.name}</div>
+            <div class="food-item-sub">${f.unit}</div>
+          </div>
+          <div class="food-item-kcal">${f.kcal} kcal</div>
+          <button class="food-add-btn" onclick="addToMealLog(${idx})">+ Ekle</button>
+        </div>`;
+    });
+  }
+
+  if (!filtered.length) {
+    html = `<div style="color:#555;font-size:13px;text-align:center;padding:20px 0">Sonuç bulunamadı.</div>`;
+  }
+
+  container.innerHTML = html;
+}
+
+window.filterFoods = function() {
+  const val = document.getElementById("foodSearchInput")?.value || "";
+  renderFoods(val);
+};
+
+window.addToMealLog = function(foodIdx) {
+  const food = FOODS[foodIdx];
+  if (!food) return;
+  mealLog.push({ name: food.name, kcal: food.kcal });
+  renderMealLog();
+  showToast("✅ " + food.name + " eklendi");
+  saveMealLog();
+};
+
+function renderMealLog() {
+  const container = document.getElementById("mealLog");
+  const totalEl   = document.getElementById("mealTotal");
+  if (!container) return;
+
+  if (!mealLog.length) {
+    container.innerHTML = `<div style="color:#444;font-size:12px;text-align:center;padding:14px 0">Henüz eklenmedi.</div>`;
+    if (totalEl) totalEl.textContent = "0 kcal";
+    return;
+  }
+
+  let total = 0;
+  let html  = "";
+  mealLog.forEach((item, i) => {
+    total += item.kcal;
+    html += `
+      <div class="meal-log-item">
+        <span class="meal-log-name">${item.name}</span>
+        <div class="meal-log-right">
+          <span class="meal-log-kcal">${item.kcal} kcal</span>
+          <button class="meal-remove-btn" onclick="removeMealItem(${i})">✕</button>
+        </div>
+      </div>`;
+  });
+
+  container.innerHTML = html;
+  if (totalEl) totalEl.textContent = total.toLocaleString("tr-TR") + " kcal";
+}
+
+window.removeMealItem = function(idx) {
+  mealLog.splice(idx, 1);
+  renderMealLog();
+  saveMealLog();
+};
+
+async function saveMealLog() {
+  if (!uid()) return;
+  await db.collection("users").doc(uid()).collection("mealLogs").doc(today()).set({
+    items: mealLog, date: today(), updatedAt: Date.now()
+  });
+}
+
+async function loadMealLog() {
+  if (!uid()) return;
+  try {
+    const snap = await db.collection("users").doc(uid()).collection("mealLogs").doc(today()).get();
+    mealLog = (snap.exists && snap.data().items) ? snap.data().items : [];
+    renderMealLog();
+  } catch(e) { mealLog = []; renderMealLog(); }
 }
 
 // ================= STARS =================

@@ -53,13 +53,13 @@
 
   <div class="top">
     <span id="topGreeting">Hoş geldin</span>
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle" title="Tema değiştir">◑</button>
   </div>
 
   <!-- HOME -->
   <div id="home" class="page">
 
-    <!-- Üst stats grid: Kilo / Hedef / Streak yan yana -->
-    <div class="home-stats-row">
+    <div class="home-stats-row four-col">
       <div class="card stat-box">
         <div class="stat-box-label">Bugünkü Kilo</div>
         <div class="stat-box-val" id="todayWeight">—</div>
@@ -75,22 +75,24 @@
         <div class="stat-box-val" id="streak">0</div>
         <div class="stat-box-unit">gün 🔥</div>
       </div>
+      <div class="card stat-box">
+        <div class="stat-box-label">Kalori</div>
+        <div class="stat-box-val" id="dailyCalDisplay">—</div>
+        <div class="stat-box-unit">kcal/gün</div>
+      </div>
     </div>
 
-    <!-- Progress Bar (hedef kilo ilerlemesi) -->
     <div class="card progress-card">
       <div class="progress-card-label">Hedefe İlerleme</div>
       <div class="progress"><div id="progressBar"></div></div>
       <p id="goalText" class="goal-text">Hedef belirlenmedi</p>
     </div>
 
-    <!-- Bench PR -->
     <div class="card bench-card">
       <div class="bench-label">Bench PR</div>
       <div class="bench-val" id="benchMax">—</div>
     </div>
 
-    <!-- Quote -->
     <div class="card quote-card">
       <div class="quote-mark">"</div>
       <div id="quoteText" class="quote-text">Yükleniyor...</div>
@@ -101,8 +103,6 @@
   <!-- KILO -->
   <div id="kilo" class="page hidden">
     <div class="page-header">Kilo Takibi</div>
-
-    <!-- Hedef Kilo -->
     <div class="card">
       <div class="card-label">Hedef Kilo</div>
       <div class="input-row">
@@ -110,8 +110,6 @@
         <button class="btn-sm" onclick="setGoal()">Kaydet</button>
       </div>
     </div>
-
-    <!-- Bugünkü kilo -->
     <div class="card">
       <div class="card-label">Bugünkü Kilonu Gir</div>
       <div class="input-row">
@@ -119,17 +117,102 @@
         <button class="btn-sm" onclick="addWeight()">Kaydet</button>
       </div>
     </div>
-
     <div class="card">
       <div class="card-label">Son 30 Gün</div>
       <canvas id="weightChart"></canvas>
     </div>
   </div>
 
+  <!-- KALORİ -->
+  <div id="kalori" class="page hidden">
+    <div class="page-header">Kalori</div>
+
+    <div class="card">
+      <div class="card-label">Günlük Kalori İhtiyacı</div>
+
+      <div class="cal-field-label">Cinsiyet</div>
+      <div class="gender-row">
+        <button class="gender-btn active" id="genderMale" onclick="selectGender('male')">Erkek</button>
+        <button class="gender-btn" id="genderFemale" onclick="selectGender('female')">Kadın</button>
+      </div>
+
+      <div class="cal-input-grid">
+        <div>
+          <div class="cal-field-label">Yaş</div>
+          <input id="calAge" type="number" placeholder="24">
+        </div>
+        <div>
+          <div class="cal-field-label">Boy (cm)</div>
+          <input id="calHeight" type="number" placeholder="178">
+        </div>
+        <div>
+          <div class="cal-field-label">Kilo (kg)</div>
+          <input id="calWeight" type="number" placeholder="80">
+        </div>
+      </div>
+
+      <div class="cal-field-label" style="margin-top:10px">Aktivite Seviyesi</div>
+      <div class="activity-list">
+        <button class="activity-btn" data-val="1.2"   onclick="selectActivity(this)">Hareketsiz (masa başı)</button>
+        <button class="activity-btn" data-val="1.375" onclick="selectActivity(this)">Hafif aktif (haftada 1-2 gün)</button>
+        <button class="activity-btn active" data-val="1.55"  onclick="selectActivity(this)">Orta aktif (haftada 3-4 gün)</button>
+        <button class="activity-btn" data-val="1.725" onclick="selectActivity(this)">Çok aktif (haftada 5-6 gün)</button>
+        <button class="activity-btn" data-val="1.9"   onclick="selectActivity(this)">Ekstra aktif (her gün)</button>
+      </div>
+
+      <button style="width:100%;margin-top:14px" onclick="calcCalories()">Hesapla</button>
+
+      <div id="calResult" class="cal-result hidden">
+        <div class="cal-cards-row">
+          <div class="cal-card cal-card-lose">
+            <div class="cal-card-label">Zayıfla</div>
+            <div class="cal-card-val" id="calLose">—</div>
+            <div class="cal-card-unit">kcal/gün</div>
+            <div class="cal-card-note">−500 kcal</div>
+          </div>
+          <div class="cal-card cal-card-keep">
+            <div class="cal-card-label">Koru</div>
+            <div class="cal-card-val" id="calKeep">—</div>
+            <div class="cal-card-unit">kcal/gün</div>
+            <div class="cal-card-note">TDEE</div>
+          </div>
+          <div class="cal-card cal-card-gain">
+            <div class="cal-card-label">Kilo Al</div>
+            <div class="cal-card-val" id="calGain">—</div>
+            <div class="cal-card-unit">kcal/gün</div>
+            <div class="cal-card-note">+500 kcal</div>
+          </div>
+        </div>
+        <div class="cal-save-row">
+          <div class="cal-field-label" style="margin:0 0 6px">Hangisini kaydet?</div>
+          <div class="cal-save-btns">
+            <button class="cal-save-btn" onclick="saveCalorieGoal('lose')">Zayıfla</button>
+            <button class="cal-save-btn" onclick="saveCalorieGoal('keep')">Koru</button>
+            <button class="cal-save-btn" onclick="saveCalorieGoal('gain')">Kilo Al</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Sporcu Yemekleri</div>
+      <input id="foodSearchInput" type="text" placeholder="Yemek ara..." oninput="filterFoods()" style="margin-bottom:6px">
+      <div id="foodList" class="food-list"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Bugün Yediklerim</div>
+      <div id="mealLog" class="meal-log"></div>
+      <div class="meal-total-row">
+        <span class="meal-total-label">Toplam</span>
+        <span class="meal-total-val" id="mealTotal">0 kcal</span>
+      </div>
+    </div>
+  </div>
+
   <!-- AGIRLIK -->
   <div id="agirlik" class="page hidden">
     <div class="page-header">Ağırlık Takibi</div>
-
     <div id="muscleSelect" class="muscle-select">
       <button class="muscle-btn" onclick="showMuscle('chest')">
         <span class="muscle-icon">◈</span>
@@ -147,24 +230,18 @@
         <span class="muscle-sub">Bacak · Core</span>
       </button>
     </div>
-
-    <!-- CHEST -->
     <div id="muscleChest" class="muscle-page hidden">
       <button class="back-btn" onclick="hideMuscle()">← Geri</button>
       <div class="section-title">CHEST & SHOULDER & TRICEPS</div>
       <div id="exerciseList-chest"></div>
       <button class="add-exercise-btn" onclick="openAddExercise('chest')">＋ Hareket Ekle</button>
     </div>
-
-    <!-- BACK -->
     <div id="muscleBack" class="muscle-page hidden">
       <button class="back-btn" onclick="hideMuscle()">← Geri</button>
       <div class="section-title">BACK & BICEPS</div>
       <div id="exerciseList-back"></div>
       <button class="add-exercise-btn" onclick="openAddExercise('back')">＋ Hareket Ekle</button>
     </div>
-
-    <!-- LEGS -->
     <div id="muscleLegs" class="muscle-page hidden">
       <button class="back-btn" onclick="hideMuscle()">← Geri</button>
       <div class="section-title">LEGS & CORE</div>
@@ -196,6 +273,9 @@
     </button>
     <button class="nav-btn" id="nav-kilo" onclick="show('kilo')">
       <span class="nav-icon">◎</span><span class="nav-label">Kilo</span>
+    </button>
+    <button class="nav-btn" id="nav-kalori" onclick="show('kalori')">
+      <span class="nav-icon">◉</span><span class="nav-label">Kalori</span>
     </button>
     <button class="nav-btn" id="nav-agirlik" onclick="show('agirlik')">
       <span class="nav-icon">◈</span><span class="nav-label">Ağırlık</span>
