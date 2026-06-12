@@ -407,6 +407,15 @@ body {
   font-weight: 800;
   color: var(--text);
   line-height: 1;
+  white-space: nowrap;
+}
+.stat-box:last-child .stat-box-val {
+  font-size: 1.05rem;
+}
+@media (max-width: 380px) {
+  .stat-box:last-child .stat-box-val {
+    font-size: 0.9rem;
+  }
 }
 .stat-box-unit {
   font-size: 9px;
@@ -977,7 +986,16 @@ button:active { transform: translateY(0); box-shadow: none; }
 .food-item-kcal {
   font-size: 12px; font-weight: 700;
   color: var(--text-dim);
-  margin-right: 10px; min-width: 58px; text-align: right;
+  margin-right: 8px; min-width: 58px; text-align: right;
+}
+.food-gram-input {
+  width: 52px !important;
+  padding: 6px 6px !important;
+  margin: 0 8px 0 0 !important;
+  font-size: 11px !important;
+  text-align: center;
+  border-radius: 8px !important;
+  flex-shrink: 0;
 }
 .food-add-btn {
   width: auto !important;

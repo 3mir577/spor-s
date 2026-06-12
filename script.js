@@ -623,38 +623,38 @@ async function loadCalorieSetting() {
 
 // ================= YEMEK VERİTABANI =================
 const FOODS = [
-  { name:"Beyaz pilav",             unit:"100g",               kcal:130,  cat:"Karbonhidrat" },
-  { name:"Esmer pilav",             unit:"100g",               kcal:110,  cat:"Karbonhidrat" },
-  { name:"Makarna (haşlanmış)",     unit:"100g",               kcal:131,  cat:"Karbonhidrat" },
-  { name:"Ekmek",                   unit:"1 dilim (30g)",      kcal:80,   cat:"Karbonhidrat" },
-  { name:"Yulaf ezmesi",            unit:"100g",               kcal:68,   cat:"Karbonhidrat" },
-  { name:"Tatlı patates",           unit:"100g",               kcal:86,   cat:"Karbonhidrat" },
-  { name:"Patates (haşlanmış)",     unit:"100g",               kcal:77,   cat:"Karbonhidrat" },
-  { name:"Muz",                     unit:"1 orta (120g)",      kcal:107,  cat:"Karbonhidrat" },
-  { name:"Tavuk göğsü",             unit:"100g",               kcal:165,  cat:"Protein" },
-  { name:"Tavuk but (derisiz)",     unit:"100g",               kcal:177,  cat:"Protein" },
-  { name:"Kırmızı et (dana)",       unit:"100g",               kcal:250,  cat:"Protein" },
-  { name:"Ton balığı (konserve)",   unit:"100g",               kcal:116,  cat:"Protein" },
-  { name:"Somon",                   unit:"100g",               kcal:208,  cat:"Protein" },
-  { name:"Yumurta",                 unit:"1 adet (50g)",       kcal:70,   cat:"Protein" },
-  { name:"Yumurta akı",             unit:"1 adet",             kcal:17,   cat:"Protein" },
-  { name:"Süzme peynir (lor)",      unit:"100g",               kcal:98,   cat:"Protein" },
-  { name:"Kuru fasulye (pişmiş)",   unit:"100g",               kcal:127,  cat:"Protein" },
-  { name:"Nohut (pişmiş)",          unit:"100g",               kcal:164,  cat:"Protein" },
-  { name:"Yağlı süt (%3.5)",        unit:"200ml",              kcal:124,  cat:"Süt Ürünleri" },
-  { name:"Yağsız süt",              unit:"200ml",              kcal:68,   cat:"Süt Ürünleri" },
-  { name:"Yoğurt (sade)",           unit:"100g",               kcal:61,   cat:"Süt Ürünleri" },
-  { name:"Süzme yoğurt",            unit:"100g",               kcal:97,   cat:"Süt Ürünleri" },
-  { name:"Beyaz peynir",            unit:"30g",                kcal:75,   cat:"Süt Ürünleri" },
-  { name:"Whey protein tozu",       unit:"1 ölçek (30g)",      kcal:120,  cat:"Süt Ürünleri" },
-  { name:"Zeytinyağı",              unit:"1 yemek kaşığı",     kcal:119,  cat:"Sağlıklı Yağ" },
-  { name:"Fıstık ezmesi",           unit:"2 yemek kaşığı",     kcal:190,  cat:"Sağlıklı Yağ" },
-  { name:"Badem",                   unit:"30g",                kcal:174,  cat:"Sağlıklı Yağ" },
-  { name:"Avokado",                 unit:"yarım (75g)",        kcal:120,  cat:"Sağlıklı Yağ" },
-  { name:"Brokoli",                 unit:"100g",               kcal:34,   cat:"Sebze" },
-  { name:"Ispanak",                 unit:"100g",               kcal:23,   cat:"Sebze" },
-  { name:"Salatalık",               unit:"100g",               kcal:15,   cat:"Sebze" },
-  { name:"Domates",                 unit:"100g",               kcal:18,   cat:"Sebze" },
+  { name:"Beyaz pilav",             unit:"100g",               kcal:130,  baseGram:100, cat:"Karbonhidrat" },
+  { name:"Esmer pilav",             unit:"100g",               kcal:110,  baseGram:100, cat:"Karbonhidrat" },
+  { name:"Makarna (haşlanmış)",     unit:"100g",               kcal:131,  baseGram:100, cat:"Karbonhidrat" },
+  { name:"Ekmek",                   unit:"1 dilim (30g)",       kcal:80,   baseGram:30,  cat:"Karbonhidrat" },
+  { name:"Yulaf ezmesi",            unit:"100g",               kcal:68,   baseGram:100, cat:"Karbonhidrat" },
+  { name:"Tatlı patates",           unit:"100g",               kcal:86,   baseGram:100, cat:"Karbonhidrat" },
+  { name:"Patates (haşlanmış)",     unit:"100g",               kcal:77,   baseGram:100, cat:"Karbonhidrat" },
+  { name:"Muz",                     unit:"1 orta (120g)",       kcal:107,  baseGram:120, cat:"Karbonhidrat" },
+  { name:"Tavuk göğsü",             unit:"100g",               kcal:165,  baseGram:100, cat:"Protein" },
+  { name:"Tavuk but (derisiz)",     unit:"100g",               kcal:177,  baseGram:100, cat:"Protein" },
+  { name:"Kırmızı et (dana)",       unit:"100g",               kcal:250,  baseGram:100, cat:"Protein" },
+  { name:"Ton balığı (konserve)",   unit:"100g",               kcal:116,  baseGram:100, cat:"Protein" },
+  { name:"Somon",                   unit:"100g",               kcal:208,  baseGram:100, cat:"Protein" },
+  { name:"Yumurta",                 unit:"1 adet (50g)",        kcal:70,   baseGram:50,  cat:"Protein" },
+  { name:"Yumurta akı",             unit:"1 adet (33g)",        kcal:17,   baseGram:33,  cat:"Protein" },
+  { name:"Süzme peynir (lor)",      unit:"100g",               kcal:98,   baseGram:100, cat:"Protein" },
+  { name:"Kuru fasulye (pişmiş)",   unit:"100g",               kcal:127,  baseGram:100, cat:"Protein" },
+  { name:"Nohut (pişmiş)",          unit:"100g",               kcal:164,  baseGram:100, cat:"Protein" },
+  { name:"Yağlı süt (%3.5)",        unit:"100ml",              kcal:62,   baseGram:100, cat:"Süt Ürünleri" },
+  { name:"Yağsız süt",              unit:"100ml",              kcal:34,   baseGram:100, cat:"Süt Ürünleri" },
+  { name:"Yoğurt (sade)",           unit:"100g",               kcal:61,   baseGram:100, cat:"Süt Ürünleri" },
+  { name:"Süzme yoğurt",            unit:"100g",               kcal:97,   baseGram:100, cat:"Süt Ürünleri" },
+  { name:"Beyaz peynir",            unit:"30g",                kcal:75,   baseGram:30,  cat:"Süt Ürünleri" },
+  { name:"Whey protein tozu",       unit:"30g (1 ölçek)",       kcal:120,  baseGram:30,  cat:"Süt Ürünleri" },
+  { name:"Zeytinyağı",              unit:"14g (1 yk)",          kcal:119,  baseGram:14,  cat:"Sağlıklı Yağ" },
+  { name:"Fıstık ezmesi",           unit:"32g (2 yk)",          kcal:190,  baseGram:32,  cat:"Sağlıklı Yağ" },
+  { name:"Badem",                   unit:"30g",                kcal:174,  baseGram:30,  cat:"Sağlıklı Yağ" },
+  { name:"Avokado",                 unit:"75g (yarım)",         kcal:120,  baseGram:75,  cat:"Sağlıklı Yağ" },
+  { name:"Brokoli",                 unit:"100g",               kcal:34,   baseGram:100, cat:"Sebze" },
+  { name:"Ispanak",                 unit:"100g",               kcal:23,   baseGram:100, cat:"Sebze" },
+  { name:"Salatalık",               unit:"100g",               kcal:15,   baseGram:100, cat:"Sebze" },
+  { name:"Domates",                 unit:"100g",               kcal:18,   baseGram:100, cat:"Sebze" },
 ];
 
 let mealLog = [];
@@ -683,9 +683,10 @@ function renderFoods(filter) {
         <div class="food-item">
           <div class="food-item-left">
             <div class="food-item-name">${f.name}</div>
-            <div class="food-item-sub">${f.unit}</div>
+            <div class="food-item-sub">${f.unit} = ${f.kcal} kcal</div>
           </div>
-          <div class="food-item-kcal">${f.kcal} kcal</div>
+          <input class="food-gram-input" id="foodGram_${idx}" type="number" value="${f.baseGram}" title="gram">
+          <div class="food-item-kcal" id="foodKcal_${idx}">${f.kcal} kcal</div>
           <button class="food-add-btn" onclick="addToMealLog(${idx})">+ Ekle</button>
         </div>`;
     });
@@ -696,6 +697,20 @@ function renderFoods(filter) {
   }
 
   container.innerHTML = html;
+
+  // Gram değiştikçe kcal güncelle
+  filtered.forEach(f => {
+    const idx = FOODS.indexOf(f);
+    const gramInput = document.getElementById("foodGram_" + idx);
+    const kcalEl    = document.getElementById("foodKcal_" + idx);
+    if (gramInput && kcalEl) {
+      gramInput.addEventListener("input", () => {
+        const g = parseFloat(gramInput.value) || 0;
+        const kcal = Math.round((f.kcal / f.baseGram) * g);
+        kcalEl.textContent = kcal + " kcal";
+      });
+    }
+  });
 }
 
 window.filterFoods = function() {
@@ -706,9 +721,13 @@ window.filterFoods = function() {
 window.addToMealLog = function(foodIdx) {
   const food = FOODS[foodIdx];
   if (!food) return;
-  mealLog.push({ name: food.name, kcal: food.kcal });
+  const gramInput = document.getElementById("foodGram_" + foodIdx);
+  const grams = (gramInput && parseFloat(gramInput.value)) || food.baseGram;
+  const kcal  = Math.round((food.kcal / food.baseGram) * grams);
+
+  mealLog.push({ name: food.name, kcal, grams });
   renderMealLog();
-  showToast("✅ " + food.name + " eklendi");
+  showToast("✅ " + food.name + " (" + grams + "g) eklendi");
   saveMealLog();
 };
 
@@ -729,7 +748,7 @@ function renderMealLog() {
     total += item.kcal;
     html += `
       <div class="meal-log-item">
-        <span class="meal-log-name">${item.name}</span>
+        <span class="meal-log-name">${item.name}${item.grams ? ` <span style="color:var(--text-sub);font-size:10px">(${item.grams}g)</span>` : ""}</span>
         <div class="meal-log-right">
           <span class="meal-log-kcal">${item.kcal} kcal</span>
           <button class="meal-remove-btn" onclick="removeMealItem(${i})">✕</button>
