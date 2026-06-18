@@ -1,5 +1,5 @@
 /* =============================================
-   FITNESS PRO MAX — REDESIGNED
+   FITNESS PRO MAX — REDESIGNED v2
    Font: Syne (display) + Space Grotesk (body)
    ============================================= */
 
@@ -21,6 +21,7 @@
   --radius-sm: 12px;
   --radius-xs: 8px;
   --app-width: 480px;
+  --star-color: #ffffff;
 }
 
 /* ── BEYAZ MOD ── */
@@ -36,9 +37,15 @@ body.light-mode {
   --text-sub: #888888;
   --text-dim: #666666;
   --accent: #111111;
+  --star-color: #111111;
 }
 
-body.light-mode .stars { display: none; }
+/* Light modda yıldızlar siyah/koyu nokta olarak görünür */
+body.light-mode .stars { display: block; }
+body.light-mode .star {
+  background: #111111;
+  box-shadow: none;
+}
 
 body.light-mode button {
   background: #111 !important;
@@ -126,6 +133,23 @@ body.light-mode .muscle-btn:hover {
   color: var(--text) !important;
 }
 
+/* Light modda motivasyon banner */
+body.light-mode .motivation-banner {
+  background: #111;
+  color: #fff;
+}
+body.light-mode .motivation-banner .banner-sub {
+  color: rgba(255,255,255,0.5);
+}
+
+/* Light modda workout timer */
+body.light-mode .workout-timer-card {
+  background: #fff;
+}
+body.light-mode .timer-display {
+  color: #111;
+}
+
 /* ─────────────────────────────── */
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -192,7 +216,7 @@ body {
 .star {
   position: absolute;
   width: 2px; height: 2px;
-  background: #fff;
+  background: var(--star-color, #fff);
   border-radius: 50%;
   animation: twinkle 2s infinite ease-in-out;
 }
@@ -582,6 +606,248 @@ button:active { transform: translateY(0); box-shadow: none; }
   color: var(--text);
   text-transform: uppercase;
   padding: 4px 0 2px;
+}
+
+/* ── MOTİVASYON BANNER (YENİ) ── */
+.motivation-banner {
+  background: var(--text);
+  color: var(--bg);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  overflow: hidden;
+  position: relative;
+}
+.motivation-banner::after {
+  content: '';
+  position: absolute;
+  right: -30px; top: -30px;
+  width: 100px; height: 100px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 50%;
+}
+.motivation-banner::before {
+  content: '';
+  position: absolute;
+  right: -10px; top: -10px;
+  width: 60px; height: 60px;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 50%;
+}
+.banner-left { flex: 1; }
+.banner-day {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.5;
+  margin-bottom: 3px;
+}
+.banner-msg {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.25;
+}
+.banner-sub {
+  font-size: 10px;
+  opacity: 0.45;
+  margin-top: 4px;
+}
+.banner-icon {
+  font-size: 2rem;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+/* ── WORKOUT TİMER (YENİ) ── */
+.workout-timer-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-top: 10px;
+  text-align: center;
+}
+.timer-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-sub);
+  margin-bottom: 8px;
+}
+.timer-display {
+  font-family: var(--font-display);
+  font-size: 3rem;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: 0.06em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.timer-btns {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+.timer-btns button {
+  flex: 1;
+  margin-top: 0 !important;
+  font-size: 11px !important;
+  padding: 9px !important;
+}
+.timer-btn-reset {
+  background: transparent !important;
+  color: var(--text-dim) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: none !important;
+}
+.timer-btn-reset:hover {
+  border-color: var(--border-hover) !important;
+  color: var(--text) !important;
+  transform: none !important;
+}
+
+/* ── BMI CARD (YENİ) ── */
+.bmi-card {
+  margin-top: 10px;
+}
+.bmi-display {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin: 8px 0 4px;
+}
+.bmi-val {
+  font-family: var(--font-display);
+  font-size: 2.8rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--text);
+}
+.bmi-label-text {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 99px;
+  margin-bottom: 4px;
+}
+.bmi-underweight { background: rgba(100,100,255,0.1); color: #8888ff; }
+.bmi-normal      { background: rgba(80,220,100,0.1);  color: #66ee88; }
+.bmi-overweight  { background: rgba(255,180,50,0.1);  color: #ffb832; }
+.bmi-obese       { background: rgba(255,80,80,0.1);   color: #ff6b6b; }
+
+.bmi-bar-wrap {
+  display: flex;
+  height: 4px;
+  border-radius: 99px;
+  overflow: hidden;
+  margin-top: 8px;
+  gap: 2px;
+}
+.bmi-seg {
+  height: 100%;
+  border-radius: 2px;
+  flex: 1;
+  opacity: 0.3;
+  transition: opacity 0.4s;
+}
+.bmi-seg.active { opacity: 1; }
+.bmi-seg-1 { background: #8888ff; }
+.bmi-seg-2 { background: #66ee88; }
+.bmi-seg-3 { background: #ffb832; }
+.bmi-seg-4 { background: #ff6b6b; }
+.bmi-range-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 8px;
+  color: var(--text-sub);
+  margin-top: 4px;
+}
+
+/* ── SU TAKİBİ (YENİ) ── */
+.water-card {
+  margin-top: 10px;
+}
+.water-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 6px 0 8px;
+}
+.water-val {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--text);
+}
+.water-unit {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+.water-glasses {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+.water-glass {
+  width: 28px; height: 34px;
+  border: 1.5px solid var(--border);
+  border-radius: 4px 4px 6px 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  background: var(--surface-2);
+  position: relative;
+  transition: border-color 0.2s, transform 0.15s;
+}
+.water-glass:hover { border-color: var(--border-hover); transform: translateY(-2px); }
+.water-glass.filled { border-color: rgba(100,160,255,0.4); }
+.water-glass-fill {
+  width: 100%;
+  background: rgba(100,160,255,0.35);
+  transition: height 0.4s cubic-bezier(0.16,1,0.3,1);
+}
+.water-glass.filled .water-glass-fill {
+  height: 100% !important;
+  background: rgba(100,160,255,0.55);
+}
+.water-glass:not(.filled) .water-glass-fill { height: 0; }
+.water-goal-text {
+  font-size: 11px;
+  color: var(--text-sub);
+  margin-top: 6px;
+}
+.water-btns {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+.water-btns button {
+  flex: 1;
+  margin-top: 0 !important;
+  font-size: 11px !important;
+  padding: 8px !important;
+}
+.water-btn-remove {
+  background: transparent !important;
+  color: var(--text-dim) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: none !important;
+}
+.water-btn-remove:hover {
+  border-color: var(--border-hover) !important;
+  color: var(--text) !important;
+  transform: none !important;
 }
 
 /* ── MUSCLE SELECT ── */
