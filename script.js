@@ -33,7 +33,9 @@ applyTheme(localStorage.getItem("fpm_theme") || "dark");
 
 // ================= AUTH STATE =================
 auth.onAuthStateChanged(user => {
-  document.getElementById("splash").style.display = "none";
+  if (document.getElementById("splash")) {
+    document.getElementById("splash").style.display = "none";
+  }
   if (user) {
     document.getElementById("loginScreen").classList.add("hidden");
     document.getElementById("app").classList.remove("hidden");
@@ -543,7 +545,7 @@ window.selectActivity = function(btn) {
 };
 
 window.calcCalories = function() {
-  const age    = parseInt(document.getElementById("calAge").value);
+  const age = parseInt(document.getElementById("calAge").value);
   const height = parseInt(document.getElementById("calHeight").value);
   const weight = parseInt(document.getElementById("calWeight").value);
 
@@ -573,7 +575,7 @@ window.saveCalorieGoal = async function(type) {
   const val = map[type];
 
   if (uid()) {
-    const age    = parseInt(document.getElementById("calAge").value);
+    const age = parseInt(document.getElementById("calAge").value);
     const height = parseInt(document.getElementById("calHeight").value);
     const weight = parseInt(document.getElementById("calWeight").value);
     await db.collection("users").doc(uid()).collection("settings").doc("calories").set({
@@ -789,6 +791,7 @@ async function loadMealLog() {
 function createStars() {
   const container = document.querySelector(".stars");
   if (!container) return;
+  container.innerHTML = ""; // Tekrarlanmayı önlemek için temizle
   for (let i = 0; i < 120; i++) {
     const star = document.createElement("div");
     star.className = "star";
@@ -803,13 +806,12 @@ function createStars() {
 createStars();
 
 // ═══════════════════════════════════════════════════════
-//  AI KALORİ SİSTEMİ
+//  AI KALORİ SİSTEMİ (GOOGLE GEMINI API INTEGRATION)
 // ═══════════════════════════════════════════════════════
 
-let aiMealLog = [];      // Bugünkü AI ile eklenen öğünler
-let lastAiResult = null; // Son AI analiz sonucu (henüz eklenmemiş)
+let aiMealLog = [];      
+let lastAiResult = null; 
 
-// --- Ana ekrandaki AI özet kartını güncelle ---
 async function loadHomeAiSummary() {
   if (!uid()) return;
   try {
@@ -820,14 +822,12 @@ async function loadHomeAiSummary() {
     const el = document.getElementById("homeTodayKcal");
     if (el) el.textContent = total.toLocaleString("tr-TR") + " kcal";
 
-    // Hedef bar
     const goal = savedDailyGoal;
     const barEl = document.getElementById("homeGoalBar");
     const goalTxt = document.getElementById("homeGoalText");
     if (barEl) barEl.style.width = (goal ? Math.min(100, (total / goal) * 100) : 0) + "%";
     if (goalTxt) goalTxt.textContent = goal ? "Hedef: " + goal.toLocaleString("tr-TR") + " kcal" : "Hedef belirlenmedi";
 
-    // Son 3 öğün pill
     const pillsEl = document.getElementById("homeAiMeals");
     if (pillsEl) {
       const last3 = items.slice(-3);
@@ -842,7 +842,6 @@ async function loadHomeAiSummary() {
   } catch(e) { console.error("homeAiSummary err", e); }
 }
 
-// --- AI Kalori sayfasını güncelle ---
 function updateAiSummaryDisplay() {
   const total = aiMealLog.reduce((s, i) => s + i.kcal, 0);
   const goal  = savedDailyGoal;
@@ -869,7 +868,6 @@ function updateAiSummaryDisplay() {
   const pctEl = document.getElementById("aiDailyPct");
   if (pctEl) pctEl.textContent = pct + "%";
 
-  // Makrolar
   const totalProtein = aiMealLog.reduce((s, i) => s + (i.protein || 0), 0);
   const totalCarb    = aiMealLog.reduce((s, i) => s + (i.carb || 0), 0);
   const totalFat     = aiMealLog.reduce((s, i) => s + (i.fat || 0), 0);
@@ -887,7 +885,6 @@ function updateAiSummaryDisplay() {
   }
 }
 
-// --- AI Öğün Logunu Render Et ---
 function renderAiMealLog() {
   const container = document.getElementById("aiMealLog");
   const totalEl   = document.getElementById("aiMealTotal");
@@ -945,17 +942,16 @@ async function loadAiMealLog() {
   } catch(e) { aiMealLog = []; renderAiMealLog(); }
 }
 
-// --- Mevcut öğünleri listeye ekle ---
 window.addAiResultToLog = function() {
   if (!lastAiResult || !lastAiResult.items || !lastAiResult.items.length) return;
 
   lastAiResult.items.forEach(item => {
     aiMealLog.push({
       name:    item.name,
-      kcal:    item.kcal,
-      protein: item.protein || 0,
-      carb:    item.carb    || 0,
-      fat:     item.fat     || 0,
+      kcal:    Number(item.kcal) || 0,
+      protein: Number(item.protein) || 0,
+      carb:    Number(item.carb) || 0,
+      fat:     Number(item.fat) || 0,
       addedAt: Date.now()
     });
   });
@@ -964,7 +960,6 @@ window.addAiResultToLog = function() {
   renderAiMealLog();
   loadHomeAiSummary();
 
-  // Giriş ve sonuç temizle
   const inp = document.getElementById("aiMealInput");
   if (inp) inp.value = "";
   const res = document.getElementById("aiResult");
@@ -974,7 +969,6 @@ window.addAiResultToLog = function() {
   showToast("✅ Öğün listeye eklendi!");
 };
 
-// --- Anthropic API ile yiyecek analizi ---
 window.analyzeWithAI = async function() {
   const input = document.getElementById("aiMealInput")?.value?.trim();
   if (!input) { showToast("⚠️ Bir şeyler yaz"); return; }
@@ -989,64 +983,62 @@ window.analyzeWithAI = async function() {
   resEl.classList.add("hidden");
   errEl.classList.add("hidden");
 
-  const systemPrompt = `Sen bir beslenme uzmanısın. Kullanıcı ne yediğini Türkçe olarak sana söylüyor.
-Sadece JSON döndür, başka hiçbir şey yazma. JSON formatı şu şekilde olmalı:
+  // Alttaki satıra Google AI Studio'dan aldığın ücretsiz API anahtarını tırnak içine yapıştır kanka:
+  const GEMINI_API_KEY = "BURAYA_GEMINI_API_ANAHTARINI_YAZ"; 
+
+  const systemPrompt = `Sen bir fitness beslenme uzmanısın. Kullanıcı ne yediğini Türkçe olarak sana söylüyor.
+Senden istenen veriyi analiz edip SADECE saf bir JSON objesi döndürmendir. Cevapta markdown etiketleri veya açıklama satırları kesinlikle OLMAYACAKTIR.
+
+JSON formatı tıpatıp şu şekilde olmalı:
 {
   "items": [
     {
       "name": "Yiyecek adı (Türkçe)",
       "amount": "miktar açıklaması (örn: 3 adet, 200g, 1 bardak)",
-      "kcal": kalori sayısı (sadece sayı),
-      "protein": protein gram (sayı),
-      "carb": karbonhidrat gram (sayı),
-      "fat": yağ gram (sayı)
+      "kcal": 150,
+      "protein": 10,
+      "carb": 20,
+      "fat": 5
     }
   ],
-  "totalKcal": toplam kalori (sayı),
-  "note": "kısa not (Türkçe, opsiyonel)"
-}
-
-Önemli kurallar:
-- Her yiyeceği/içeceği ayrı item yap
-- Gerçekçi ve doğru kalori değerleri kullan
-- Miktar belirtilmemişse tipik porsiyon kullan
-- Sadece JSON döndür, açıklama yapma`;
+  "totalKcal": 150,
+  "note": "kısa motivasyonel veya bilgilendirici not (Türkçe, maks 1 cümle)"
+}`;
 
   try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    
+    const response = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "claude-sonnet-4-6",
-        max_tokens: 1000,
-        system: systemPrompt,
-        messages: [{ role: "user", content: input }]
+        contents: [{
+          parts: [{ text: `${systemPrompt}\n\nKullanıcının Öğünü:\n${input}` }]
+        }],
+        generationConfig: { responseMimeType: "application/json" }
       })
     });
 
-    const data = await response.json();
-
-    if (!response.ok || data.error) {
-      throw new Error(data.error?.message || "API hatası");
+    if (!response.ok) {
+      const errData = await response.json();
+      throw new Error(errData.error?.message || "Gemini bağlantı hatası.");
     }
 
-    const rawText = data.content
-      .filter(c => c.type === "text")
-      .map(c => c.text)
-      .join("");
+    const data = await response.json();
+    const rawText = data.candidates[0].content.parts[0].text.trim();
+    const cleanJsonString = rawText.replace(/```json|```/gi, "").trim();
+    const parsed = JSON.parse(cleanJsonString);
 
-    // JSON parse (markdown bloklarını temizle)
-    const clean = rawText.replace(/```json|```/gi, "").trim();
-    const parsed = JSON.parse(clean);
-
-    if (!parsed.items || !Array.isArray(parsed.items)) throw new Error("Geçersiz yanıt");
+    if (!parsed.items || !Array.isArray(parsed.items)) {
+      throw new Error("Yapay zeka geçersiz veri formatı döndürdü.");
+    }
 
     lastAiResult = parsed;
     showAiResult(parsed, input);
 
   } catch(err) {
-    console.error("AI analyze error:", err);
-    errEl.textContent = "⚠️ Analiz sırasında hata oluştu: " + err.message + ". Lütfen tekrar dene.";
+    console.error("Gemini AI error:", err);
+    errEl.textContent = "⚠️ Hata: " + err.message + ". Lütfen API anahtarını kontrol et.";
     errEl.classList.remove("hidden");
   } finally {
     btn.classList.remove("loading");
@@ -1069,9 +1061,9 @@ function showAiResult(parsed, originalInput) {
   `).join("");
 
   const macroTotal = {
-    p: parsed.items.reduce((s, i) => s + (i.protein || 0), 0),
-    c: parsed.items.reduce((s, i) => s + (i.carb    || 0), 0),
-    f: parsed.items.reduce((s, i) => s + (i.fat     || 0), 0),
+    p: parsed.items.reduce((s, i) => s + (Number(i.protein) || 0), 0),
+    c: parsed.items.reduce((s, i) => s + (Number(i.carb)    || 0), 0),
+    f: parsed.items.reduce((s, i) => s + (Number(i.fat)     || 0), 0),
   };
 
   const macroHtml = (macroTotal.p || macroTotal.c || macroTotal.f) ? `
@@ -1079,12 +1071,9 @@ function showAiResult(parsed, originalInput) {
       <span style="font-size:10px;color:#cc99ff">P: ${Math.round(macroTotal.p)}g</span>
       <span style="font-size:10px;color:#ffcc44">K: ${Math.round(macroTotal.c)}g</span>
       <span style="font-size:10px;color:#ff9944">Y: ${Math.round(macroTotal.f)}g</span>
-    </div>
-  ` : "";
+    </div>` : "";
 
-  const noteHtml = parsed.note
-    ? `<div style="font-size:10px;color:var(--text-sub);margin-top:6px;font-style:italic">${parsed.note}</div>`
-    : "";
+  const noteHtml = parsed.note ? `<div style="font-size:10px;color:var(--text-sub);margin-top:6px;font-style:italic">${parsed.note}</div>` : "";
 
   resEl.innerHTML = `
     <div class="ai-result-header">✦ AI Analiz Sonucu</div>
@@ -1097,7 +1086,6 @@ function showAiResult(parsed, originalInput) {
     ${noteHtml}
     <button class="ai-result-add-btn" onclick="addAiResultToLog()">+ Listeye Ekle</button>
   `;
-
   resEl.classList.remove("hidden");
 }
 
