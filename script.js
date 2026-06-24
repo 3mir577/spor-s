@@ -534,8 +534,10 @@ let savedDailyGoal   = 0;
 
 window.selectGender = function(g) {
   selectedGender = g;
-  document.getElementById("genderMale").classList.toggle("active",   g === "male");
-  document.getElementById("genderFemale").classList.toggle("active", g === "female");
+  const maleEl = document.getElementById("genderMale");
+  const femaleEl = document.getElementById("genderFemale");
+  if (maleEl) maleEl.classList.toggle("active", g === "male");
+  if (femaleEl) femaleEl.classList.toggle("active", g === "female");
 };
 
 window.selectActivity = function(btn) {
@@ -561,11 +563,16 @@ window.calcCalories = function() {
   const tdee = Math.round(bmr * selectedActivity);
   lastCalcTDEE = tdee;
 
-  document.getElementById("calLose").textContent = (tdee - 500).toLocaleString("tr-TR");
-  document.getElementById("calKeep").textContent = tdee.toLocaleString("tr-TR");
-  document.getElementById("calGain").textContent = (tdee + 500).toLocaleString("tr-TR");
+  const loseEl = document.getElementById("calLose");
+  const keepEl = document.getElementById("calKeep");
+  const gainEl = document.getElementById("calGain");
 
-  document.getElementById("calResult").classList.remove("hidden");
+  if (loseEl) loseEl.textContent = (tdee - 500).toLocaleString("tr-TR");
+  if (keepEl) keepEl.textContent = tdee.toLocaleString("tr-TR");
+  if (gainEl) gainEl.textContent = (tdee + 500).toLocaleString("tr-TR");
+
+  const resEl = document.getElementById("calResult");
+  if (resEl) resEl.classList.remove("hidden");
 };
 
 window.saveCalorieGoal = async function(type) {
@@ -589,7 +596,6 @@ window.saveCalorieGoal = async function(type) {
   if (dispEl) dispEl.textContent = val.toLocaleString("tr-TR");
 
   showToast("🔥 " + labelMap[type] + " modu: " + val.toLocaleString("tr-TR") + " kcal/gün");
-  updateAiSummaryDisplay();
 };
 
 async function loadCalorieSetting() {
@@ -617,9 +623,12 @@ async function loadCalorieSetting() {
       }
       if (d.age && d.height && d.weight) {
         lastCalcTDEE = Math.round(d.value + (d.goalType === "lose" ? 500 : d.goalType === "gain" ? -500 : 0));
-        document.getElementById("calLose") && (document.getElementById("calLose").textContent = (lastCalcTDEE - 500).toLocaleString("tr-TR"));
-        document.getElementById("calKeep") && (document.getElementById("calKeep").textContent = lastCalcTDEE.toLocaleString("tr-TR"));
-        document.getElementById("calGain") && (document.getElementById("calGain").textContent = (lastCalcTDEE + 500).toLocaleString("tr-TR"));
+        const loseEl = document.getElementById("calLose");
+        const keepEl = document.getElementById("calKeep");
+        const gainEl = document.getElementById("calGain");
+        if (loseEl) loseEl.textContent = (lastCalcTDEE - 500).toLocaleString("tr-TR");
+        if (keepEl) keepEl.textContent = lastCalcTDEE.toLocaleString("tr-TR");
+        if (gainEl) gainEl.textContent = (lastCalcTDEE + 500).toLocaleString("tr-TR");
         const resEl = document.getElementById("calResult");
         if (resEl) resEl.classList.remove("hidden");
       }
@@ -699,7 +708,7 @@ function renderFoods(filter) {
   }
 
   if (!filtered.length) {
-    html = `<div style="color:#555;font-size:13px;text-align:center;padding:20px 0">Sonuç bulunamadı.</div>`;
+    html = `<div style="color:#555;font-size:13px;text-align:center;padding:20px 0">Sonucu bulunamadı.</div>`;
   }
 
   container.innerHTML = html;
@@ -791,7 +800,7 @@ async function loadMealLog() {
 function createStars() {
   const container = document.querySelector(".stars");
   if (!container) return;
-  container.innerHTML = ""; // Tekrarlanmayı önlemek için temizle
+  container.innerHTML = "";
   for (let i = 0; i < 120; i++) {
     const star = document.createElement("div");
     star.className = "star";
@@ -842,49 +851,6 @@ async function loadHomeAiSummary() {
   } catch(e) { console.error("homeAiSummary err", e); }
 }
 
-function updateAiSummaryDisplay() {
-  const total = aiMealLog.reduce((s, i) => s + i.kcal, 0);
-  const goal  = savedDailyGoal;
-
-  const totalEl = document.getElementById("aiTodayTotal");
-  if (totalEl) totalEl.textContent = total.toLocaleString("tr-TR");
-
-  const goalEl = document.getElementById("aiGoalKcal");
-  if (goalEl) goalEl.textContent = goal ? goal.toLocaleString("tr-TR") : "—";
-
-  const remEl = document.getElementById("aiRemaining");
-  if (remEl) {
-    const rem = goal ? goal - total : null;
-    remEl.textContent = rem !== null ? Math.abs(rem).toLocaleString("tr-TR") : "—";
-    remEl.classList.toggle("over", rem !== null && rem < 0);
-  }
-
-  const pct = goal ? Math.min(100, Math.round((total / goal) * 100)) : 0;
-  const barEl = document.getElementById("aiDailyBar");
-  if (barEl) {
-    barEl.style.width = pct + "%";
-    barEl.classList.toggle("over", goal && total > goal);
-  }
-  const pctEl = document.getElementById("aiDailyPct");
-  if (pctEl) pctEl.textContent = pct + "%";
-
-  const totalProtein = aiMealLog.reduce((s, i) => s + (i.protein || 0), 0);
-  const totalCarb    = aiMealLog.reduce((s, i) => s + (i.carb || 0), 0);
-  const totalFat     = aiMealLog.reduce((s, i) => s + (i.fat || 0), 0);
-
-  const macroCard = document.getElementById("aiMacroCard");
-  if (macroCard) {
-    if (totalProtein || totalCarb || totalFat) {
-      macroCard.style.display = "block";
-      document.getElementById("macroProtein").textContent = Math.round(totalProtein) + "g";
-      document.getElementById("macroCarb").textContent    = Math.round(totalCarb) + "g";
-      document.getElementById("macroFat").textContent     = Math.round(totalFat) + "g";
-    } else {
-      macroCard.style.display = "none";
-    }
-  }
-}
-
 function renderAiMealLog() {
   const container = document.getElementById("aiMealLog");
   const totalEl   = document.getElementById("aiMealTotal");
@@ -893,7 +859,6 @@ function renderAiMealLog() {
   if (!aiMealLog.length) {
     container.innerHTML = `<div style="color:#444;font-size:12px;text-align:center;padding:16px 0">Henüz öğün eklenmedi.<br><span style="font-size:10px;color:#333">Yukarıdan AI ile analiz et</span></div>`;
     if (totalEl) totalEl.textContent = "0 kcal";
-    updateAiSummaryDisplay();
     return;
   }
 
@@ -916,7 +881,6 @@ function renderAiMealLog() {
 
   container.innerHTML = html;
   if (totalEl) totalEl.textContent = total.toLocaleString("tr-TR") + " kcal";
-  updateAiSummaryDisplay();
 }
 
 window.removeAiMealItem = function(idx) {
@@ -974,16 +938,14 @@ window.analyzeWithAI = async function() {
   if (!input) { showToast("⚠️ Bir şeyler yaz"); return; }
 
   const btn     = document.getElementById("aiAnalyzeBtn");
-  const btnText = document.getElementById("aiAnalyzeBtnText");
   const resEl   = document.getElementById("aiResult");
   const errEl   = document.getElementById("aiError");
 
-  btn.classList.add("loading");
-  btnText.textContent = "Analiz ediliyor...";
-  resEl.classList.add("hidden");
-  errEl.classList.add("hidden");
+  if (btn) btn.classList.add("loading");
+  if (resEl) resEl.classList.add("hidden");
+  if (errEl) errEl.classList.add("hidden");
 
-  // Alttaki satıra Google AI Studio'dan aldığın ücretsiz API anahtarını tırnak içine yapıştır kanka:
+  // Buraya kendi Gemini API anahtarını tırnak içinde yapıştır kanka:
   const GEMINI_API_KEY = "BURAYA_GEMINI_API_ANAHTARINI_YAZ"; 
 
   const systemPrompt = `Sen bir fitness beslenme uzmanısın. Kullanıcı ne yediğini Türkçe olarak sana söylüyor.
@@ -1038,11 +1000,12 @@ JSON formatı tıpatıp şu şekilde olmalı:
 
   } catch(err) {
     console.error("Gemini AI error:", err);
-    errEl.textContent = "⚠️ Hata: " + err.message + ". Lütfen API anahtarını kontrol et.";
-    errEl.classList.remove("hidden");
+    if (errEl) {
+      errEl.textContent = "⚠️ Hata: " + err.message + ". Lütfen API anahtarını kontrol et.";
+      errEl.classList.remove("hidden");
+    }
   } finally {
-    btn.classList.remove("loading");
-    btnText.textContent = "✦ AI ile Analiz Et";
+    if (btn) btn.classList.remove("loading");
   }
 };
 
