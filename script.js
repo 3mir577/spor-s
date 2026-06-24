@@ -29,7 +29,6 @@ window.toggleTheme = function() {
   applyTheme(current === "dark" ? "light" : "dark");
 };
 
-// Sayfa açılışında temayı uygula
 applyTheme(localStorage.getItem("fpm_theme") || "dark");
 
 // ================= AUTH STATE =================
@@ -111,6 +110,10 @@ window.show = function(page){
   if (page === "kalori") {
     renderFoods();
     loadMealLog();
+    loadCalorieSetting();
+  }
+  if (page === "ai") {
+    loadAiMealLog();
     loadCalorieSetting();
   }
 };
@@ -439,8 +442,8 @@ async function loadData(){
     drawWeightChart(weights);
     drawStatsCharts(weights, recentLifts);
 
-    // Kalori ayarını da yükle (ana ekran için)
     loadCalorieSetting();
+    loadHomeAiSummary();
 
   } catch(err){ console.error("LOAD ERROR:", err); }
 }
@@ -525,6 +528,7 @@ function drawStatsCharts(weights, lifts){
 let selectedGender   = "male";
 let selectedActivity = 1.55;
 let lastCalcTDEE     = 0;
+let savedDailyGoal   = 0;
 
 window.selectGender = function(g) {
   selectedGender = g;
@@ -545,7 +549,6 @@ window.calcCalories = function() {
 
   if (!age || !height || !weight) { showToast("⚠️ Yaş, boy ve kilo gir"); return; }
 
-  // Mifflin-St Jeor BMR
   let bmr;
   if (selectedGender === "male") {
     bmr = 10 * weight + 6.25 * height - 5 * age + 5;
@@ -579,10 +582,12 @@ window.saveCalorieGoal = async function(type) {
     });
   }
 
+  savedDailyGoal = val;
   const dispEl = document.getElementById("dailyCalDisplay");
   if (dispEl) dispEl.textContent = val.toLocaleString("tr-TR");
 
   showToast("🔥 " + labelMap[type] + " modu: " + val.toLocaleString("tr-TR") + " kcal/gün");
+  updateAiSummaryDisplay();
 };
 
 async function loadCalorieSetting() {
@@ -591,10 +596,10 @@ async function loadCalorieSetting() {
     const snap = await db.collection("users").doc(uid()).collection("settings").doc("calories").get();
     if (snap.exists && snap.data().value) {
       const d = snap.data();
+      savedDailyGoal = d.value;
       const dispEl = document.getElementById("dailyCalDisplay");
       if (dispEl) dispEl.textContent = d.value.toLocaleString("tr-TR");
 
-      // Formu doldur (kalori sayfasındaysa)
       const ageEl = document.getElementById("calAge");
       if (ageEl && d.age) ageEl.value = d.age;
       const htEl = document.getElementById("calHeight");
@@ -608,7 +613,6 @@ async function loadCalorieSetting() {
           b.classList.toggle("active", parseFloat(b.dataset.val) === d.activity);
         });
       }
-      // Sonuç göster
       if (d.age && d.height && d.weight) {
         lastCalcTDEE = Math.round(d.value + (d.goalType === "lose" ? 500 : d.goalType === "gain" ? -500 : 0));
         document.getElementById("calLose") && (document.getElementById("calLose").textContent = (lastCalcTDEE - 500).toLocaleString("tr-TR"));
@@ -698,7 +702,6 @@ function renderFoods(filter) {
 
   container.innerHTML = html;
 
-  // Gram değiştikçe kcal güncelle
   filtered.forEach(f => {
     const idx = FOODS.indexOf(f);
     const gramInput = document.getElementById("foodGram_" + idx);
@@ -798,5 +801,304 @@ function createStars() {
   }
 }
 createStars();
+
+// ═══════════════════════════════════════════════════════
+//  AI KALORİ SİSTEMİ
+// ═══════════════════════════════════════════════════════
+
+let aiMealLog = [];      // Bugünkü AI ile eklenen öğünler
+let lastAiResult = null; // Son AI analiz sonucu (henüz eklenmemiş)
+
+// --- Ana ekrandaki AI özet kartını güncelle ---
+async function loadHomeAiSummary() {
+  if (!uid()) return;
+  try {
+    const snap = await db.collection("users").doc(uid()).collection("aiMealLogs").doc(today()).get();
+    const items = (snap.exists && snap.data().items) ? snap.data().items : [];
+
+    const total = items.reduce((s, i) => s + i.kcal, 0);
+    const el = document.getElementById("homeTodayKcal");
+    if (el) el.textContent = total.toLocaleString("tr-TR") + " kcal";
+
+    // Hedef bar
+    const goal = savedDailyGoal;
+    const barEl = document.getElementById("homeGoalBar");
+    const goalTxt = document.getElementById("homeGoalText");
+    if (barEl) barEl.style.width = (goal ? Math.min(100, (total / goal) * 100) : 0) + "%";
+    if (goalTxt) goalTxt.textContent = goal ? "Hedef: " + goal.toLocaleString("tr-TR") + " kcal" : "Hedef belirlenmedi";
+
+    // Son 3 öğün pill
+    const pillsEl = document.getElementById("homeAiMeals");
+    if (pillsEl) {
+      const last3 = items.slice(-3);
+      if (last3.length) {
+        pillsEl.innerHTML = last3.map(i =>
+          `<span class="ai-today-pill">${i.name} · ${i.kcal} kcal</span>`
+        ).join("");
+      } else {
+        pillsEl.innerHTML = `<span style="color:var(--text-sub);font-size:11px">Henüz öğün eklenmedi</span>`;
+      }
+    }
+  } catch(e) { console.error("homeAiSummary err", e); }
+}
+
+// --- AI Kalori sayfasını güncelle ---
+function updateAiSummaryDisplay() {
+  const total = aiMealLog.reduce((s, i) => s + i.kcal, 0);
+  const goal  = savedDailyGoal;
+
+  const totalEl = document.getElementById("aiTodayTotal");
+  if (totalEl) totalEl.textContent = total.toLocaleString("tr-TR");
+
+  const goalEl = document.getElementById("aiGoalKcal");
+  if (goalEl) goalEl.textContent = goal ? goal.toLocaleString("tr-TR") : "—";
+
+  const remEl = document.getElementById("aiRemaining");
+  if (remEl) {
+    const rem = goal ? goal - total : null;
+    remEl.textContent = rem !== null ? Math.abs(rem).toLocaleString("tr-TR") : "—";
+    remEl.classList.toggle("over", rem !== null && rem < 0);
+  }
+
+  const pct = goal ? Math.min(100, Math.round((total / goal) * 100)) : 0;
+  const barEl = document.getElementById("aiDailyBar");
+  if (barEl) {
+    barEl.style.width = pct + "%";
+    barEl.classList.toggle("over", goal && total > goal);
+  }
+  const pctEl = document.getElementById("aiDailyPct");
+  if (pctEl) pctEl.textContent = pct + "%";
+
+  // Makrolar
+  const totalProtein = aiMealLog.reduce((s, i) => s + (i.protein || 0), 0);
+  const totalCarb    = aiMealLog.reduce((s, i) => s + (i.carb || 0), 0);
+  const totalFat     = aiMealLog.reduce((s, i) => s + (i.fat || 0), 0);
+
+  const macroCard = document.getElementById("aiMacroCard");
+  if (macroCard) {
+    if (totalProtein || totalCarb || totalFat) {
+      macroCard.style.display = "block";
+      document.getElementById("macroProtein").textContent = Math.round(totalProtein) + "g";
+      document.getElementById("macroCarb").textContent    = Math.round(totalCarb) + "g";
+      document.getElementById("macroFat").textContent     = Math.round(totalFat) + "g";
+    } else {
+      macroCard.style.display = "none";
+    }
+  }
+}
+
+// --- AI Öğün Logunu Render Et ---
+function renderAiMealLog() {
+  const container = document.getElementById("aiMealLog");
+  const totalEl   = document.getElementById("aiMealTotal");
+  if (!container) return;
+
+  if (!aiMealLog.length) {
+    container.innerHTML = `<div style="color:#444;font-size:12px;text-align:center;padding:16px 0">Henüz öğün eklenmedi.<br><span style="font-size:10px;color:#333">Yukarıdan AI ile analiz et</span></div>`;
+    if (totalEl) totalEl.textContent = "0 kcal";
+    updateAiSummaryDisplay();
+    return;
+  }
+
+  let total = 0;
+  let html  = "";
+  aiMealLog.forEach((item, i) => {
+    total += item.kcal;
+    const macroStr = (item.protein || item.carb || item.fat)
+      ? ` <span style="color:var(--text-sub);font-size:10px">P:${Math.round(item.protein||0)}g K:${Math.round(item.carb||0)}g Y:${Math.round(item.fat||0)}g</span>`
+      : "";
+    html += `
+      <div class="meal-log-item">
+        <span class="meal-log-name">${item.name}${macroStr}</span>
+        <div class="meal-log-right">
+          <span class="meal-log-kcal">${item.kcal} kcal</span>
+          <button class="ai-meal-remove-btn" onclick="removeAiMealItem(${i})">✕</button>
+        </div>
+      </div>`;
+  });
+
+  container.innerHTML = html;
+  if (totalEl) totalEl.textContent = total.toLocaleString("tr-TR") + " kcal";
+  updateAiSummaryDisplay();
+}
+
+window.removeAiMealItem = function(idx) {
+  aiMealLog.splice(idx, 1);
+  renderAiMealLog();
+  saveAiMealLog();
+  loadHomeAiSummary();
+};
+
+async function saveAiMealLog() {
+  if (!uid()) return;
+  await db.collection("users").doc(uid()).collection("aiMealLogs").doc(today()).set({
+    items: aiMealLog, date: today(), updatedAt: Date.now()
+  });
+}
+
+async function loadAiMealLog() {
+  if (!uid()) return;
+  try {
+    const snap = await db.collection("users").doc(uid()).collection("aiMealLogs").doc(today()).get();
+    aiMealLog = (snap.exists && snap.data().items) ? snap.data().items : [];
+    renderAiMealLog();
+  } catch(e) { aiMealLog = []; renderAiMealLog(); }
+}
+
+// --- Mevcut öğünleri listeye ekle ---
+window.addAiResultToLog = function() {
+  if (!lastAiResult || !lastAiResult.items || !lastAiResult.items.length) return;
+
+  lastAiResult.items.forEach(item => {
+    aiMealLog.push({
+      name:    item.name,
+      kcal:    item.kcal,
+      protein: item.protein || 0,
+      carb:    item.carb    || 0,
+      fat:     item.fat     || 0,
+      addedAt: Date.now()
+    });
+  });
+
+  saveAiMealLog();
+  renderAiMealLog();
+  loadHomeAiSummary();
+
+  // Giriş ve sonuç temizle
+  const inp = document.getElementById("aiMealInput");
+  if (inp) inp.value = "";
+  const res = document.getElementById("aiResult");
+  if (res) res.classList.add("hidden");
+  lastAiResult = null;
+
+  showToast("✅ Öğün listeye eklendi!");
+};
+
+// --- Anthropic API ile yiyecek analizi ---
+window.analyzeWithAI = async function() {
+  const input = document.getElementById("aiMealInput")?.value?.trim();
+  if (!input) { showToast("⚠️ Bir şeyler yaz"); return; }
+
+  const btn     = document.getElementById("aiAnalyzeBtn");
+  const btnText = document.getElementById("aiAnalyzeBtnText");
+  const resEl   = document.getElementById("aiResult");
+  const errEl   = document.getElementById("aiError");
+
+  btn.classList.add("loading");
+  btnText.textContent = "Analiz ediliyor...";
+  resEl.classList.add("hidden");
+  errEl.classList.add("hidden");
+
+  const systemPrompt = `Sen bir beslenme uzmanısın. Kullanıcı ne yediğini Türkçe olarak sana söylüyor.
+Sadece JSON döndür, başka hiçbir şey yazma. JSON formatı şu şekilde olmalı:
+{
+  "items": [
+    {
+      "name": "Yiyecek adı (Türkçe)",
+      "amount": "miktar açıklaması (örn: 3 adet, 200g, 1 bardak)",
+      "kcal": kalori sayısı (sadece sayı),
+      "protein": protein gram (sayı),
+      "carb": karbonhidrat gram (sayı),
+      "fat": yağ gram (sayı)
+    }
+  ],
+  "totalKcal": toplam kalori (sayı),
+  "note": "kısa not (Türkçe, opsiyonel)"
+}
+
+Önemli kurallar:
+- Her yiyeceği/içeceği ayrı item yap
+- Gerçekçi ve doğru kalori değerleri kullan
+- Miktar belirtilmemişse tipik porsiyon kullan
+- Sadece JSON döndür, açıklama yapma`;
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: [{ role: "user", content: input }]
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || data.error) {
+      throw new Error(data.error?.message || "API hatası");
+    }
+
+    const rawText = data.content
+      .filter(c => c.type === "text")
+      .map(c => c.text)
+      .join("");
+
+    // JSON parse (markdown bloklarını temizle)
+    const clean = rawText.replace(/```json|```/gi, "").trim();
+    const parsed = JSON.parse(clean);
+
+    if (!parsed.items || !Array.isArray(parsed.items)) throw new Error("Geçersiz yanıt");
+
+    lastAiResult = parsed;
+    showAiResult(parsed, input);
+
+  } catch(err) {
+    console.error("AI analyze error:", err);
+    errEl.textContent = "⚠️ Analiz sırasında hata oluştu: " + err.message + ". Lütfen tekrar dene.";
+    errEl.classList.remove("hidden");
+  } finally {
+    btn.classList.remove("loading");
+    btnText.textContent = "✦ AI ile Analiz Et";
+  }
+};
+
+function showAiResult(parsed, originalInput) {
+  const resEl = document.getElementById("aiResult");
+  if (!resEl) return;
+
+  let itemsHtml = parsed.items.map(item => `
+    <div class="ai-result-item">
+      <span class="ai-result-item-name">
+        ${item.name}
+        <span class="ai-result-item-detail">${item.amount || ""}</span>
+      </span>
+      <span class="ai-result-item-kcal">${item.kcal} kcal</span>
+    </div>
+  `).join("");
+
+  const macroTotal = {
+    p: parsed.items.reduce((s, i) => s + (i.protein || 0), 0),
+    c: parsed.items.reduce((s, i) => s + (i.carb    || 0), 0),
+    f: parsed.items.reduce((s, i) => s + (i.fat     || 0), 0),
+  };
+
+  const macroHtml = (macroTotal.p || macroTotal.c || macroTotal.f) ? `
+    <div style="display:flex;gap:10px;margin-top:8px;margin-bottom:2px">
+      <span style="font-size:10px;color:#cc99ff">P: ${Math.round(macroTotal.p)}g</span>
+      <span style="font-size:10px;color:#ffcc44">K: ${Math.round(macroTotal.c)}g</span>
+      <span style="font-size:10px;color:#ff9944">Y: ${Math.round(macroTotal.f)}g</span>
+    </div>
+  ` : "";
+
+  const noteHtml = parsed.note
+    ? `<div style="font-size:10px;color:var(--text-sub);margin-top:6px;font-style:italic">${parsed.note}</div>`
+    : "";
+
+  resEl.innerHTML = `
+    <div class="ai-result-header">✦ AI Analiz Sonucu</div>
+    ${itemsHtml}
+    ${macroHtml}
+    <div class="ai-result-total">
+      <span class="ai-result-total-label">Toplam</span>
+      <span class="ai-result-total-kcal">${parsed.totalKcal} kcal</span>
+    </div>
+    ${noteHtml}
+    <button class="ai-result-add-btn" onclick="addAiResultToLog()">+ Listeye Ekle</button>
+  `;
+
+  resEl.classList.remove("hidden");
+}
 
 window.db = db;

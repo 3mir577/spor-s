@@ -82,6 +82,24 @@
       </div>
     </div>
 
+    <!-- AI KALORİ ÖZET KARTI (ANA EKRAN) -->
+    <div class="card ai-today-card" onclick="show('ai')">
+      <div class="ai-today-header">
+        <div>
+          <div class="card-label">Bugün Yediklerim · AI Takip</div>
+          <div class="ai-today-kcal" id="homeTodayKcal">0 kcal</div>
+        </div>
+        <div class="ai-today-right">
+          <div class="ai-today-goal-bar-wrap">
+            <div class="ai-today-goal-bar"><div id="homeGoalBar"></div></div>
+            <div class="ai-today-goal-text" id="homeGoalText">Hedef: — kcal</div>
+          </div>
+          <div class="ai-today-arrow">AI Kalori →</div>
+        </div>
+      </div>
+      <div id="homeAiMeals" class="ai-today-meals"></div>
+    </div>
+
     <div class="card progress-card">
       <div class="progress-card-label">Hedefe İlerleme</div>
       <div class="progress"><div id="progressBar"></div></div>
@@ -210,6 +228,79 @@
     </div>
   </div>
 
+  <!-- AI KALORİ SAYFASI -->
+  <div id="ai" class="page hidden">
+    <div class="page-header">AI Kalori</div>
+
+    <!-- Günlük Özet -->
+    <div class="card ai-summary-card">
+      <div class="ai-sum-row">
+        <div class="ai-sum-block">
+          <div class="card-label">Bugün Alınan</div>
+          <div class="ai-sum-kcal" id="aiTodayTotal">0</div>
+          <div class="stat-box-unit">kcal</div>
+        </div>
+        <div class="ai-sum-divider"></div>
+        <div class="ai-sum-block">
+          <div class="card-label">Hedef</div>
+          <div class="ai-sum-kcal ai-sum-goal" id="aiGoalKcal">—</div>
+          <div class="stat-box-unit">kcal/gün</div>
+        </div>
+        <div class="ai-sum-divider"></div>
+        <div class="ai-sum-block">
+          <div class="card-label">Kalan</div>
+          <div class="ai-sum-kcal ai-sum-remaining" id="aiRemaining">—</div>
+          <div class="stat-box-unit">kcal</div>
+        </div>
+      </div>
+      <div class="ai-daily-bar-wrap">
+        <div class="ai-daily-bar"><div id="aiDailyBar"></div></div>
+        <div class="ai-daily-pct" id="aiDailyPct">0%</div>
+      </div>
+    </div>
+
+    <!-- AI GİRİŞ ALANI -->
+    <div class="card ai-input-card">
+      <div class="card-label">Ne yedin? AI'ya sor</div>
+      <div class="ai-input-hint">Örn: "3 yumurta", "1 bardak süt ve 2 dilim ekmek", "200g tavuk göğsü"</div>
+      <textarea id="aiMealInput" placeholder="Yediğin yiyeceği yaz..." rows="2"></textarea>
+      <button class="ai-analyze-btn" onclick="analyzeWithAI()" id="aiAnalyzeBtn">
+        <span id="aiAnalyzeBtnText">✦ AI ile Analiz Et</span>
+      </button>
+      <div id="aiResult" class="ai-result hidden"></div>
+      <div id="aiError" class="ai-error hidden"></div>
+    </div>
+
+    <!-- Bugünün Öğünleri -->
+    <div class="card">
+      <div class="card-label">Bugünün Öğünleri</div>
+      <div id="aiMealLog" class="meal-log"></div>
+      <div class="meal-total-row">
+        <span class="meal-total-label">Toplam</span>
+        <span class="meal-total-val" id="aiMealTotal">0 kcal</span>
+      </div>
+    </div>
+
+    <!-- Makro Özeti -->
+    <div class="card" id="aiMacroCard" style="display:none">
+      <div class="card-label">Tahmini Makrolar (Bugün)</div>
+      <div class="macro-row">
+        <div class="macro-block macro-protein">
+          <div class="macro-val" id="macroProtein">0g</div>
+          <div class="macro-label">Protein</div>
+        </div>
+        <div class="macro-block macro-carb">
+          <div class="macro-val" id="macroCarb">0g</div>
+          <div class="macro-label">Karbonhidrat</div>
+        </div>
+        <div class="macro-block macro-fat">
+          <div class="macro-val" id="macroFat">0g</div>
+          <div class="macro-label">Yağ</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- AGIRLIK -->
   <div id="agirlik" class="page hidden">
     <div class="page-header">Ağırlık Takibi</div>
@@ -274,8 +365,8 @@
     <button class="nav-btn" id="nav-kilo" onclick="show('kilo')">
       <span class="nav-icon">◎</span><span class="nav-label">Kilo</span>
     </button>
-    <button class="nav-btn" id="nav-kalori" onclick="show('kalori')">
-      <span class="nav-icon">◉</span><span class="nav-label">Kalori</span>
+    <button class="nav-btn" id="nav-ai" onclick="show('ai')">
+      <span class="nav-icon">✦</span><span class="nav-label">AI Kalori</span>
     </button>
     <button class="nav-btn" id="nav-agirlik" onclick="show('agirlik')">
       <span class="nav-icon">◈</span><span class="nav-label">Ağırlık</span>
