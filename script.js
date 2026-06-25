@@ -981,7 +981,7 @@ window.addAiResultToLog = function() {
 // Her kayıt: [anahtar kelimeler, kcal/100g, protein/100g, karb/100g, yağ/100g, varsayılan porsiyon(g), porsiyon adı]
 const CALORIE_DB = [
   // YUMURTA & SÜTSÜZ PROTEİN
-  { keys:["yumurta","egg"],                    kcal:65, p:5.54, c:1.1, f:11, def:50,  unit:"adet" },
+  { keys:["yumurta","egg"],                    kcal:65, p:5, c:1, f:11, def:50,  unit:"adet" },
   { keys:["yumurta akı","egg white","beyaz"],  kcal:52,  p:11, c:0.7, f:0.2,def:33, unit:"adet" },
   { keys:["haşlanmış yumurta"],                kcal:155, p:13, c:1.1, f:11, def:50,  unit:"adet" },
   { keys:["sahanda yumurta","omlet","omelet"],  kcal:185, p:12, c:1,   f:15, def:100, unit:"porsiyon" },
